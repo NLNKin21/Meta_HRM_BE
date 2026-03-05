@@ -1,39 +1,38 @@
 package com.metahrms.employee_management.repository;
 
-import com.metahrms.employee_management.entity.Contract;
-import com.metahrms.employee_management.enums.ContractStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.metahrms.employee_management.entity.Contract;
+import com.metahrms.employee_management.enums.ContractStatus;
+import com.metahrms.employee_management.enums.ContractType;
+
 @Repository
-public interface ContractRepository extends JpaRepository<Contract, Long> {
+public interface ContractRepository extends JpaRepository<Contract, Integer>, JpaSpecificationExecutor<Contract> {
 
-    Optional<Contract> findByIdAndIsDeletedFalse(Long id);
+    Optional<Contract> findById(Integer id);
 
-    Optional<Contract> findByContractNumberAndIsDeletedFalse(String contractNumber);
+    List<Contract> findByEmpId(Integer empId);
 
-    List<Contract> findByEmployeeIdAndIsDeletedFalseOrderByStartDateDesc(Long employeeId);
+    @Query("SELECT c FROM Contract c WHERE c.empId = :empId AND c.isDeleted = false")
+    List<Contract> findActiveContractsByEmpId(@Param("empId") Integer empId);
 
-    List<Contract> findByStatusAndIsDeletedFalse(ContractStatus status);
+    List<Contract> findByStatus(ContractStatus status);
 
-    Optional<Contract> findByEmployeeIdAndStatusAndIsDeletedFalse(Long employeeId, ContractStatus status);
+    List<Contract> findByContractType(ContractType contractType);
 
-    boolean existsByContractNumber(String contractNumber);
+    @Query("SELECT c FROM Contract c WHERE c.endDate < :date AND c.status = :status")
+    List<Contract> findExpiringContracts(@Param("date") LocalDate date, @Param("status") ContractStatus status);
 
-    // Hợp đồng sắp hết hạn
-    @Query("SELECT c FROM Contract c WHERE c.status = 'ACTIVE' AND c.isDeleted = false " +
-           "AND c.endDate BETWEEN :today AND :futureDate")
-    List<Contract> findExpiringContracts(@Param("today") LocalDate today, 
-                                         @Param("futureDate") LocalDate futureDate);
+    // Dashboard queries
+    List<Contract> findByIsDeletedAndStatus(boolean isDeleted, ContractStatus status);
 
-    // Hợp đồng đã hết hạn chưa xử lý
-    @Query("SELECT c FROM Contract c WHERE c.status = 'ACTIVE' AND c.isDeleted = false " +
-           "AND c.endDate < :today")
-    List<Contract> findExpiredContracts(@Param("today") LocalDate today);
+    void deleteById(Integer id);
 }

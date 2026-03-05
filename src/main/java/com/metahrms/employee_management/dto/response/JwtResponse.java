@@ -1,6 +1,6 @@
 package com.metahrms.employee_management.dto.response;
 
-import com.metahrms.employee_management.enums.Role;
+import com.metahrms.employee_management.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ public class JwtResponse {
     private Long userId;
     private String username;
     private String email;
-    private Role role;
+    private UserRole role;
     private Long employeeId;
     private String employeeName;
 }

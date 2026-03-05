@@ -1,9 +1,8 @@
 package com.metahrms.employee_management.enums;
 
 public enum TaskStatus {
-    TODO,
+    PENDING,
     IN_PROGRESS,
-    REVIEW,
     COMPLETED,
     CANCELLED
 }

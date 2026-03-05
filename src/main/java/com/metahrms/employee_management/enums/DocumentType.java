@@ -1,12 +1,9 @@
 package com.metahrms.employee_management.enums;
 
 public enum DocumentType {
-    ID_CARD,
-    PASSPORT,
-    DRIVING_LICENSE,
+    HEALTH_INSURANCE,
     DEGREE,
     CERTIFICATE,
-    CONTRACT,
-    INSURANCE,
+    ID_CARD,
     OTHER
 }

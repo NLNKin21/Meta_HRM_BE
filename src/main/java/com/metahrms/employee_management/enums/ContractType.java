@@ -1,9 +1,7 @@
 package com.metahrms.employee_management.enums;
 
 public enum ContractType {
-    FULL_TIME,
     PART_TIME,
+    FULL_TIME,
     INTERNSHIP,
-    PROBATION,
-    CONTRACTOR
 }

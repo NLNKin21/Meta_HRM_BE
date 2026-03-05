@@ -40,8 +40,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:your-email@gmail.com}
-    password: ${MAIL_PASSWORD:your-app-password}
+    username: ${MAIL_USERNAME:nlnhttl21@gmail.com}
+    password: ${MAIL_PASSWORD:17012003nhat}
     properties:
       mail:
         smtp:
@@ -76,19 +76,18 @@ server:
 # JWT CONFIGURATION
 # ==========================================
 jwt:
-  secret: ${JWT_SECRET:myVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong2024!@#$%^&*}
-  expiration: 86400000  # 24 hours in milliseconds
-  refresh-expiration: 604800000  # 7 days
+  signerKey: myVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong2024!@#$%^&*
+  expiration: 86400000 # 24 hours in milliseconds
+  refresh-expiration: 604800000 # 7 days
 
 # ==========================================
 # AWS S3 CONFIGURATION
 # ==========================================
 aws:
-  access-key: ${AWS_ACCESS_KEY:your-access-key}
-  secret-key: ${AWS_SECRET_KEY:your-secret-key}
-  s3:
-    bucket: ${AWS_S3_BUCKET:employee-management-bucket}
-    region: ${AWS_S3_REGION:ap-southeast-1}
+  accessKeyId: ${AWS_ACCESS_KEY:your-access-key}
+  secretAccessKey: ${AWS_SECRET_KEY:your-secret-key}
+  region: ${AWS_S3_REGION:ap-southeast-1}
+  bucketName: ${AWS_S3_BUCKET:employee-management-bucket}
 
 # ==========================================
 # SWAGGER/OPENAPI CONFIGURATION
