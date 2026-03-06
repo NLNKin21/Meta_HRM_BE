@@ -1,0 +1,70 @@
+package com.metahrms.employee_management.repository;
+
+import com.metahrms.employee_management.entity.Contract;
+import com.metahrms.employee_management.enums.ContractStatus;
+import com.metahrms.employee_management.enums.ContractType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+public interface ContractRepository extends JpaRepository<Contract, Long> {
+
+    Optional<Contract> findByIdAndIsDeletedFalse(Long id);
+
+    Optional<Contract> findByContractNumberAndIsDeletedFalse(String contractNumber);
+
+    boolean existsByContractNumberAndIsDeletedFalse(String contractNumber);
+
+    Optional<Contract> findByEmployeeIdAndStatusAndIsDeletedFalse(
+            Long employeeId,
+            ContractStatus status
+    );
+
+    List<Contract> findByEmployeeIdAndIsDeletedFalseOrderByStartDateDesc(Long employeeId);
+
+    List<Contract> findByStatusAndIsDeletedFalse(ContractStatus status);
+
+    Page<Contract> findByIsDeletedFalse(Pageable pageable);
+
+    // expired
+    @Query("""
+        SELECT c FROM Contract c
+        WHERE c.isDeleted = false
+        AND c.status = 'ACTIVE'
+        AND c.endDate < :today
+    """)
+    List<Contract> findAllExpired(@Param("today") LocalDate today);
+
+    // expiring soon
+    @Query("""
+        SELECT c FROM Contract c
+        WHERE c.isDeleted = false
+        AND c.status = 'ACTIVE'
+        AND c.endDate BETWEEN :today AND :futureDate
+    """)
+    List<Contract> findExpiringContracts(
+            @Param("today") LocalDate today,
+            @Param("futureDate") LocalDate futureDate
+    );
+
+    // search
+    @Query("""
+        SELECT c FROM Contract c
+        WHERE c.isDeleted = false
+        AND (:contractNumber IS NULL OR c.contractNumber LIKE %:contractNumber%)
+        AND (:status IS NULL OR c.status = :status)
+        AND (:contractType IS NULL OR c.contractType = :contractType)
+    """)
+    Page<Contract> searchContracts(
+            @Param("contractNumber") String contractNumber,
+            @Param("status") ContractStatus status,
+            @Param("contractType") ContractType contractType,
+            Pageable pageable
+    );
+}
