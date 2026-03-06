@@ -12,6 +12,7 @@ spring:
   # -------------------- DATABASE --------------------
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/meta_hrm?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    url: jdbc:mysql://127.0.0.1:3306/metahrm?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -42,6 +43,8 @@ spring:
     port: 587
     username: ${MAIL_USERNAME:your-email@gmail.com}
     password: ${MAIL_PASSWORD:your-app-password}
+    username: ${MAIL_USERNAME:nlnhttl21@gmail.com}
+    password: ${MAIL_PASSWORD:17012003nhat}
     properties:
       mail:
         smtp:
@@ -79,6 +82,9 @@ jwt:
   secret: ${JWT_SECRET:myVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong2024!@#$%^&*}
   expiration: 86400000  # 24 hours in milliseconds
   refresh-expiration: 604800000  # 7 days
+  signerKey: myVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong2024!@#$%^&*
+  expiration: 86400000 # 24 hours in milliseconds
+  refresh-expiration: 604800000 # 7 days
 
 # ==========================================
 # AWS S3 CONFIGURATION
@@ -89,6 +95,10 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET:employee-management-bucket}
     region: ${AWS_S3_REGION:ap-southeast-1}
+  accessKeyId: ${AWS_ACCESS_KEY:your-access-key}
+  secretAccessKey: ${AWS_SECRET_KEY:your-secret-key}
+  region: ${AWS_S3_REGION:ap-southeast-1}
+  bucketName: ${AWS_S3_BUCKET:employee-management-bucket}
 
 # ==========================================
 # SWAGGER/OPENAPI CONFIGURATION
@@ -129,4 +139,5 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
+    name: logs/application.log
     name: logs/application.log

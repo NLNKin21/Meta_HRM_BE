@@ -1,6 +1,7 @@
 package com.metahrms.employee_management.repository;
 
 import com.metahrms.employee_management.entity.User;
+<<<<<<< HEAD
 import com.metahrms.employee_management.enums.Role;
 import com.metahrms.employee_management.enums.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,4 +42,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.failedLoginAttempts = 0, u.lockTime = null WHERE u.username = :username")
     void resetFailedAttempts(@Param("username") String username);
+=======
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecificationExecutor<User> {
+    boolean existsByEmail(String email);
+    Optional<User> findByEmail(String email);
+
+    @Query("SELECT u FROM User u WHERE u.id NOT IN (SELECT e.userId FROM Employee e WHERE e.isDeleted = false)")
+    List<User> findUsersNotLinkedToEmployee();
+>>>>>>> 8c6be7d9d227d6c9e9aae8bb6ebeb4808ead22d3
 }

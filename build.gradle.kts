@@ -34,6 +34,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+<<<<<<< HEAD
+=======
+	implementation("org.springframework.boot:spring-boot-starter-mail")
+>>>>>>> 8c6be7d9d227d6c9e9aae8bb6ebeb4808ead22d3
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("com.mysql:mysql-connector-j")
@@ -41,6 +45,10 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+<<<<<<< HEAD
+=======
+	implementation("software.amazon.awssdk:s3:2.25.26")
+>>>>>>> 8c6be7d9d227d6c9e9aae8bb6ebeb4808ead22d3
 }
 
 tasks.withType<Test> {
