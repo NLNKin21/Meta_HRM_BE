@@ -72,7 +72,7 @@ public class UserController {
     )
     @GetMapping("/{id}")
     public ApiResponse<UserResponse> getUserById(
-            @Parameter(description = "User ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "User ID", required = true, example = "1") @PathVariable("id") Integer id) {
         UserResponse user = userService.getUserById(id);
 
         ApiResponse<UserResponse> response = new ApiResponse<>();
@@ -110,7 +110,7 @@ public class UserController {
     )
     @PutMapping("/{id}")
     public ApiResponse<UserResponse> updateUser(
-            @Parameter(description = "User ID", required = true, example = "1") @PathVariable Integer id,
+            @Parameter(description = "User ID", required = true, example = "1") @PathVariable("id") Integer id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "User update data",
                 required = true,

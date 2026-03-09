@@ -79,7 +79,7 @@ public class EmployeeController {
     @Operation(summary = "Get employee by ID", description = "Retrieve a single employee by their ID")
     @GetMapping("/{id}")
     public ApiResponse<EmployeeResponse> getEmployeeById(
-            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable("id") Integer id) {
         EmployeeResponse employee = employeeService.getEmployeeById(id);
 
         ApiResponse<EmployeeResponse> apiResponse = new ApiResponse<>();
@@ -107,7 +107,7 @@ public class EmployeeController {
     @Operation(summary = "Update employee", description = "Update an existing employee record. All fields are optional for partial updates.")
     @PutMapping("/{id}")
     public ApiResponse<EmployeeResponse> updateEmployee(
-            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable Integer id,
+            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable("id") Integer id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Employee update data", required = true)
             @Valid @RequestBody EmployeeUpdateDto updateDto) {
         EmployeeResponse employee = employeeService.updateEmployee(id, updateDto);
@@ -122,7 +122,7 @@ public class EmployeeController {
     @Operation(summary = "Delete employee", description = "Soft delete an employee (sets isDeleted = true)")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteEmployee(
-            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Employee ID", required = true, example = "1") @PathVariable("id") Integer id) {
         employeeService.deleteEmployee(id);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>();

@@ -74,7 +74,7 @@ public class ContractController {
     @Operation(summary = "Get contract by ID", description = "Retrieve a single contract by its ID")
     @GetMapping("/{id}")
     public ApiResponse<ContractResponse> getContractById(
-            @Parameter(description = "Contract ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Contract ID", required = true, example = "1") @PathVariable("id") Integer id) {
         ContractResponse contract = contractService.getContractById(id);
 
         ApiResponse<ContractResponse> apiResponse = new ApiResponse<>();
@@ -102,7 +102,7 @@ public class ContractController {
     @Operation(summary = "Update contract", description = "Update an existing contract record. All fields are optional for partial updates.")
     @PutMapping("/{id}")
     public ApiResponse<ContractResponse> updateContract(
-            @Parameter(description = "Contract ID", required = true, example = "1") @PathVariable Integer id,
+            @Parameter(description = "Contract ID", required = true, example = "1") @PathVariable("id") Integer id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Contract update data", required = true)
             @Valid @RequestBody ContractUpdateDto updateDto) {
         ContractResponse contract = contractService.updateContract(id, updateDto);
@@ -117,7 +117,7 @@ public class ContractController {
     @Operation(summary = "Delete contract", description = "Soft delete a contract (sets isDeleted = true)")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteContract(
-            @Parameter(description = "Contract ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Contract ID", required = true, example = "1") @PathVariable("id") Integer id) {
         contractService.deleteContract(id);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>();

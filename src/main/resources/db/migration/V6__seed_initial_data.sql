@@ -1,7 +1,7 @@
 -- ============================================
 -- V3__seed_initial_data.sql
 -- Seed data cho Employee Management System
--- Password mặc định: 123456
+-- Password mặc định: 12345678
 -- ============================================
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -15,33 +15,33 @@ TRUNCATE TABLE `users`;
 INSERT INTO `users`
 (`id`,`created_at`,`is_deleted`,`updated_at`,`email`,`password`,`role`,`status`,`username`) VALUES
 -- Admin hệ thống
-(1, '2025-01-02 09:00:00',b'0','2025-01-02 09:00:00','admin@gmail.com',         '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',0,0,'admin'),
+(1, '2025-01-02 09:00:00',b'0','2025-01-02 09:00:00','admin@gmail.com',         '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',0,0,'admin'),
 -- Trưởng phòng HR → role=HR(2)
-(2, '2025-01-03 09:10:00',b'0','2025-01-03 09:10:00','hr.manager@company.com',   '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',2,0,'hr_manager'),
+(2, '2025-01-03 09:10:00',b'0','2025-01-03 09:10:00','hr.manager@company.com',   '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',2,0,'hr_manager'),
 -- Trưởng phòng IT → role=EMPLOYEE(1), quyền phòng ban xác định bởi role_in_dept
-(3, '2025-01-04 09:20:00',b'0','2025-01-04 09:20:00','it.manager@company.com',   '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'it_manager'),
+(3, '2025-01-04 09:20:00',b'0','2025-01-04 09:20:00','it.manager@company.com',   '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'it_manager'),
 -- Trưởng phòng Tài chính → role=ACCOUNTANT(3)
-(4, '2025-01-05 09:30:00',b'0','2025-01-05 09:30:00','finance.manager@company.com','$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',3,0,'finance_manager'),
+(4, '2025-01-05 09:30:00',b'0','2025-01-05 09:30:00','finance.manager@company.com','$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',3,0,'finance_manager'),
 -- Trưởng phòng Sales → role=EMPLOYEE(1)
-(5, '2025-01-06 09:40:00',b'0','2025-01-06 09:40:00','sales.manager@company.com','$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'sales_manager'),
+(5, '2025-01-06 09:40:00',b'0','2025-01-06 09:40:00','sales.manager@company.com','$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'sales_manager'),
 -- Nhân viên thường
-(6, '2025-01-07 09:50:00',b'0','2025-01-07 09:50:00','nguyen.vana@company.com',  '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'nguyen_vana'),
-(7, '2025-01-07 10:00:00',b'0','2025-01-07 10:00:00','tran.thib@company.com',    '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'tran_thib'),
-(8, '2025-01-07 10:10:00',b'0','2025-01-07 10:10:00','le.vanc@company.com',      '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'le_vanc'),
-(9, '2025-01-07 10:20:00',b'0','2025-01-07 10:20:00','pham.thid@company.com',    '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'pham_thid'),
-(10,'2025-01-07 10:30:00',b'0','2025-01-07 10:30:00','hoang.vane@company.com',   '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'hoang_vane'),
-(11,'2025-01-07 10:40:00',b'0','2025-01-07 10:40:00','vu.thif@company.com',      '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'vu_thif'),
-(12,'2025-01-07 10:50:00',b'0','2025-01-07 10:50:00','do.vang@company.com',      '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'do_vang'),
-(13,'2025-01-07 11:00:00',b'0','2025-01-07 11:00:00','bui.thih@company.com',     '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'bui_thih'),
+(6, '2025-01-07 09:50:00',b'0','2025-01-07 09:50:00','nguyen.vana@company.com',  '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'nguyen_vana'),
+(7, '2025-01-07 10:00:00',b'0','2025-01-07 10:00:00','tran.thib@company.com',    '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'tran_thib'),
+(8, '2025-01-07 10:10:00',b'0','2025-01-07 10:10:00','le.vanc@company.com',      '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'le_vanc'),
+(9, '2025-01-07 10:20:00',b'0','2025-01-07 10:20:00','pham.thid@company.com',    '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'pham_thid'),
+(10,'2025-01-07 10:30:00',b'0','2025-01-07 10:30:00','hoang.vane@company.com',   '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'hoang_vane'),
+(11,'2025-01-07 10:40:00',b'0','2025-01-07 10:40:00','vu.thif@company.com',      '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'vu_thif'),
+(12,'2025-01-07 10:50:00',b'0','2025-01-07 10:50:00','do.vang@company.com',      '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'do_vang'),
+(13,'2025-01-07 11:00:00',b'0','2025-01-07 11:00:00','bui.thih@company.com',     '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'bui_thih'),
 -- Thực tập sinh
-(14,'2025-01-07 11:10:00',b'0','2025-01-07 11:10:00','intern1@company.com',      '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'intern_minh'),
-(15,'2025-01-07 11:20:00',b'0','2025-01-07 11:20:00','intern2@company.com',      '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,0,'intern_lan'),
+(14,'2025-01-07 11:10:00',b'0','2025-01-07 11:10:00','intern1@company.com',      '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'intern_minh'),
+(15,'2025-01-07 11:20:00',b'0','2025-01-07 11:20:00','intern2@company.com',      '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,0,'intern_lan'),
 -- Đã nghỉ việc → status=DISABLED(2)
-(16,'2025-01-07 11:30:00',b'0','2025-01-07 11:30:00','resigned@company.com',     '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,2,'resigned_user'),
+(16,'2025-01-07 11:30:00',b'0','2025-01-07 11:30:00','resigned@company.com',     '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,2,'resigned_user'),
 -- Chờ kích hoạt → status=PENDING(3)
-(17,'2025-01-07 11:40:00',b'0','2025-01-07 11:40:00','pending@company.com',      '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,3,'pending_user'),
+(17,'2025-01-07 11:40:00',b'0','2025-01-07 11:40:00','pending@company.com',      '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,3,'pending_user'),
 -- Đã xóa mềm → is_deleted=1, status=DELETED(1)
-(18,'2025-01-07 11:50:00',b'1','2025-01-07 11:50:00','deleted@company.com',      '$2a$10$AJbOOE/9iofntD4o7iClpO1WvESTu8KFreDrHxEKh5YLq24n728jy',1,1,'deleted_user');
+(18,'2025-01-07 11:50:00',b'1','2025-01-07 11:50:00','deleted@company.com',      '$2a$10$SPsuhzJ5RkMZXz1hLucDi.pBNNF7E.EaR2VnKpMTxlTKQOW9oMpLa',1,1,'deleted_user');
 
 -- ============================================
 -- DEPARTMENTS

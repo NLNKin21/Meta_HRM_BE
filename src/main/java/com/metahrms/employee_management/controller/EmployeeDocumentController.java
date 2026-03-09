@@ -86,7 +86,7 @@ public class EmployeeDocumentController {
     @Operation(summary = "Get document by ID", description = "Retrieve a single employee document by its ID")
     @GetMapping("/{id}")
     public ApiResponse<EmployeeDocumentResponse> getDocumentById(
-            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable("id") Integer id) {
         EmployeeDocumentResponse document = employeeDocumentService.getDocumentById(id);
 
         ApiResponse<EmployeeDocumentResponse> apiResponse = new ApiResponse<>();
@@ -114,7 +114,7 @@ public class EmployeeDocumentController {
     @Operation(summary = "Update employee document", description = "Update an existing employee document record. All fields are optional for partial updates.")
     @PutMapping("/{id}")
     public ApiResponse<EmployeeDocumentResponse> updateDocument(
-            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable Integer id,
+            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable("id") Integer id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Document update data", required = true)
             @Valid @RequestBody EmployeeDocumentUpdateDto updateDto) {
         EmployeeDocumentResponse document = employeeDocumentService.updateDocument(id, updateDto);
@@ -129,7 +129,7 @@ public class EmployeeDocumentController {
     @Operation(summary = "Delete employee document", description = "Soft delete an employee document (sets isDeleted = true)")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteDocument(
-            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable("id") Integer id) {
         employeeDocumentService.deleteDocument(id);
 
         ApiResponse<Void> apiResponse = new ApiResponse<>();
@@ -141,7 +141,7 @@ public class EmployeeDocumentController {
     @Operation(summary = "Download employee document", description = "Get a presigned download URL for an employee document (valid for 12 hours)")
     @GetMapping("/{id}/download")
     public ApiResponse<String> downloadDocument(
-            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Document ID", required = true, example = "1") @PathVariable("id") Integer id) {
         String downloadUrl = employeeDocumentService.getDownloadUrl(id);
 
         return ApiResponse.<String>builder()

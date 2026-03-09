@@ -51,7 +51,7 @@ public class DepartmentController {
     )
     @GetMapping("/{id}")
     public ApiResponse<DepartmentResponse> getDepartmentById(
-            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable("id") Integer id) {
         DepartmentResponse department = departmentService.getDepartmentById(id);
 
         return ApiResponse.<DepartmentResponse>builder()
@@ -90,7 +90,7 @@ public class DepartmentController {
     )
     @PutMapping("/{id}")
     public ApiResponse<DepartmentResponse> updateDepartment(
-            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable Integer id,
+            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable("id") Integer id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "Department update data",
                 required = true,
@@ -114,7 +114,7 @@ public class DepartmentController {
     )
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteDepartment(
-            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable("id") Integer id) {
         departmentService.deleteDepartment(id);
 
         return ApiResponse.<Void>builder()
