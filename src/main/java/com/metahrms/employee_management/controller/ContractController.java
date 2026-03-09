@@ -44,13 +44,13 @@ public class ContractController {
     @Operation(summary = "Get all contracts", description = "Retrieve a paginated list of contracts with optional filtering by status, contract type, employee ID, and dates")
     @GetMapping
     public ApiResponse<PagedResponse<ContractResponse>> getContracts(
-            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(required = false, defaultValue = "0") Integer page,
-            @Parameter(description = "Number of items per page", example = "10") @RequestParam(required = false, defaultValue = "10") Integer pageSize,
-            @Parameter(description = "Filter by contract status") @RequestParam(required = false) ContractStatus status,
-            @Parameter(description = "Filter by contract type") @RequestParam(required = false) ContractType contractType,
-            @Parameter(description = "Filter by employee ID") @RequestParam(required = false) Integer empId,
-            @Parameter(description = "Filter by start date (format: dd/MM/yyyy)", example = "01/01/2024") @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate startDate,
-            @Parameter(description = "Filter by end date (format: dd/MM/yyyy)", example = "31/12/2024") @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate endDate) {
+            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(name="page",required = false, defaultValue = "0") Integer page,
+            @Parameter(description = "Number of items per page", example = "10") @RequestParam(name = "pageSize",required = false, defaultValue = "10") Integer pageSize,
+            @Parameter(description = "Filter by contract status") @RequestParam(name="status",required = false) ContractStatus status,
+            @Parameter(description = "Filter by contract type") @RequestParam(name="contractType",required = false) ContractType contractType,
+            @Parameter(description = "Filter by employee ID") @RequestParam(name="empId",required = false) Integer empId,
+            @Parameter(description = "Filter by start date (format: dd/MM/yyyy)", example = "01/01/2024") @RequestParam(name="startDate", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate startDate,
+            @Parameter(description = "Filter by end date (format: dd/MM/yyyy)", example = "31/12/2024") @RequestParam(name="endDate", required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate endDate) {
 
         ContractFilterDto filterDto = ContractFilterDto.builder()
             .page(page)

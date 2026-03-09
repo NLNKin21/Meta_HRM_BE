@@ -97,7 +97,7 @@ public class UserService {
         user.setEmail(dto.getEmail());
 
         // Use role from DTO, default to USER if not provided
-        user.setRole(dto.getRole() != null ? dto.getRole() : UserRole.USER);
+        user.setRole(dto.getRole() != null ? dto.getRole() : UserRole.EMPLOYEE);
 
         // Use status from DTO, default to ACTIVE if not provided
         user.setStatus(dto.getStatus() != null ? dto.getStatus() : UserStatus.ACTIVE);

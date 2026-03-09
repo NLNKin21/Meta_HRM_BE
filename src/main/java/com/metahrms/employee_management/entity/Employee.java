@@ -9,6 +9,8 @@ import com.metahrms.employee_management.enums.RoleInDepartment;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,6 +30,7 @@ public class Employee extends BaseEntity {
     @Column(name = "full_name", length = 150)
     private String fullName;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private Gender gender;
 
@@ -46,9 +49,11 @@ public class Employee extends BaseEntity {
     @Column(name = "basic_salary", precision = 12, scale = 2)
     private BigDecimal basicSalary;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private EmployeeStatus status = EmployeeStatus.ACTIVE;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "role_in_dept", length = 20)
     private RoleInDepartment roleInDept = RoleInDepartment.STAFF;
 

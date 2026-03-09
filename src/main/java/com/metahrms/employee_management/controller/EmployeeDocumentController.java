@@ -45,10 +45,10 @@ public class EmployeeDocumentController {
     @Operation(summary = "Get all documents", description = "Retrieve a paginated list of employee documents with optional filtering by employee ID and document type")
     @GetMapping
     public ApiResponse<PagedResponse<EmployeeDocumentResponse>> getDocuments(
-            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(required = false, defaultValue = "0") Integer page,
-            @Parameter(description = "Number of items per page", example = "10") @RequestParam(required = false, defaultValue = "10") Integer pageSize,
-            @Parameter(description = "Filter by employee ID") @RequestParam(required = false) Integer empId,
-            @Parameter(description = "Filter by document type") @RequestParam(required = false) DocumentType docType,
+            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(name="page",required = false, defaultValue = "0") Integer page,
+            @Parameter(description = "Number of items per page", example = "10") @RequestParam(name="pageSize",required = false, defaultValue = "10") Integer pageSize,
+            @Parameter(description = "Filter by employee ID") @RequestParam(name="empId",required = false) Integer empId,
+            @Parameter(description = "Filter by document type") @RequestParam(name="docType",required = false) DocumentType docType,
             HttpServletRequest request) {
 
         @SuppressWarnings("unchecked")

@@ -3,6 +3,8 @@ package com.metahrms.employee_management.entity;
 import com.metahrms.employee_management.enums.DocumentType;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -17,6 +19,7 @@ public class EmployeeDocument extends BaseEntity {
     @Column(name = "emp_id")
     private Integer empId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "doc_type", length = 100)
     private DocumentType docType;
 

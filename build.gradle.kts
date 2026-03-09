@@ -43,6 +43,12 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	implementation("software.amazon.awssdk:s3:2.25.26")
+	implementation("org.flywaydb:flyway-core")
+	implementation ("org.flywaydb:flyway-mysql")
+}
+
+tasks.withType<JavaCompile> {
+	options.compilerArgs.add("-parameters")
 }
 
 tasks.withType<Test> {

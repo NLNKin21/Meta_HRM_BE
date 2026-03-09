@@ -41,12 +41,12 @@ public class UserController {
     )
     @GetMapping
     public ApiResponse<PagedResponse<UserResponse>> getUsers(
-            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(required = false, defaultValue = "0") Integer page,
-            @Parameter(description = "Number of items per page", example = "10") @RequestParam(required = false, defaultValue = "10") Integer pageSize,
-            @Parameter(description = "Filter by user status") @RequestParam(required = false) UserStatus status,
-            @Parameter(description = "Filter by department ID") @RequestParam(required = false) Integer deptId,
-            @Parameter(description = "Filter by date of birth (format: dd/MM/yyyy)", example = "01/01/1990") @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate dob,
-            @Parameter(description = "Search in user fields (case-insensitive)") @RequestParam(required = false) String search
+            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(name="page",required = false, defaultValue = "0") Integer page,
+            @Parameter(description = "Number of items per page", example = "10") @RequestParam(name = "pageSize",required = false, defaultValue = "10") Integer pageSize,
+            @Parameter(description = "Filter by user status") @RequestParam(name = "status",required = false) UserStatus status,
+            @Parameter(description = "Filter by department ID") @RequestParam(name = "deptId",required = false) Integer deptId,
+            @Parameter(description = "Filter by date of birth (format: dd/MM/yyyy)", example = "01/01/1990") @RequestParam(name = "dob",required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate dob,
+            @Parameter(description = "Search in user fields (case-insensitive)") @RequestParam(name = "search",required = false) String search
     ) {
         UserFilterDto filterDto = UserFilterDto.builder()
                 .page(page)

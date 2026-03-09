@@ -51,12 +51,12 @@ public class EmployeeController {
     @Operation(summary = "Get all employees", description = "Retrieve a paginated list of employees with optional filtering by status, department, hire date, and name search")
     @GetMapping
     public ApiResponse<PagedResponse<EmployeeResponse>> getEmployees(
-            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(required = false, defaultValue = "0") Integer page,
-            @Parameter(description = "Number of items per page", example = "10") @RequestParam(required = false, defaultValue = "10") Integer pageSize,
-            @Parameter(description = "Filter by employee status") @RequestParam(required = false) EmployeeStatus status,
-            @Parameter(description = "Filter by department ID") @RequestParam(required = false) Integer deptId,
-            @Parameter(description = "Filter by hire date (format: dd/MM/yyyy)", example = "01/01/2024") @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate hireDate,
-            @Parameter(description = "Search in employee name (case-insensitive)") @RequestParam(required = false) String search) {
+            @Parameter(description = "Page number (zero-based)", example = "0") @RequestParam(name = "page",required = false, defaultValue = "0") Integer page,
+            @Parameter(description = "Number of items per page", example = "10") @RequestParam(name = "pageSize",required = false, defaultValue = "10") Integer pageSize,
+            @Parameter(description = "Filter by employee status") @RequestParam(name = "status",required = false) EmployeeStatus status,
+            @Parameter(description = "Filter by department ID") @RequestParam(name = "deptId",required = false) Integer deptId,
+            @Parameter(description = "Filter by hire date (format: dd/MM/yyyy)", example = "01/01/2024") @RequestParam(name = "hireDate",required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate hireDate,
+            @Parameter(description = "Search in employee name (case-insensitive)") @RequestParam(name = "search",required = false) String search) {
 
         EmployeeFilterDto filterDto = EmployeeFilterDto.builder()
             .page(page)

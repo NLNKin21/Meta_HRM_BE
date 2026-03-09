@@ -7,6 +7,8 @@ import com.metahrms.employee_management.enums.ContractType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +22,7 @@ public class Contract extends BaseEntity {
     @Column(name = "emp_id")
     private Integer empId;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "contract_type", length = 50)
     private ContractType contractType;
 
@@ -32,6 +35,7 @@ public class Contract extends BaseEntity {
     @Column(name = "file_url", length = 255)
     private String fileUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private ContractStatus status = ContractStatus.ACTIVE;
 

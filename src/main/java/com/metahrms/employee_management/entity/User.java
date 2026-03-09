@@ -3,6 +3,9 @@ package com.metahrms.employee_management.entity;
 import com.metahrms.employee_management.enums.UserRole;
 import com.metahrms.employee_management.enums.UserStatus;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.Data;
 import jakarta.persistence.Table;
@@ -20,8 +23,12 @@ public class User extends BaseEntity {
 
     private String email;
 
+    @Enumerated(EnumType.ORDINAL)  // Lưu bằng số: 0,1,2,3
+    @Column(name = "role", nullable = false)
     private UserRole role;
 
+    @Enumerated(EnumType.ORDINAL)  // Lưu bằng số: 0,1,2,3
+    @Column(name = "status", nullable = false)
     private UserStatus status;
 
     public static Builder builder() {
