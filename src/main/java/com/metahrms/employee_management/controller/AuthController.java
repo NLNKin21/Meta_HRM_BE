@@ -63,11 +63,15 @@ public class AuthController {
 
         response.addCookie(jwtCookie);
 
-        ApiResponse<AuthResponse> apiResponse = new ApiResponse<AuthResponse>();
+        AuthResponse authData = AuthResponse.builder()
+                .accessToken(token)
+                .build();
 
-        apiResponse.setStatus("success");
-        apiResponse.setMessage("Login successfilly");
-        return apiResponse;
+        return ApiResponse.<AuthResponse>builder()
+                .status("success")
+                .message("Login successfully")
+                .data(authData)
+                .build();
     }
 
     @Operation(

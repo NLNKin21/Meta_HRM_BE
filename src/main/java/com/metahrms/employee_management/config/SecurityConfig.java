@@ -48,21 +48,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        // httpSecurity.authorizeHttpRequests(request -> request
-        //         .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
-        //         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-        //         .anyRequest().authenticated());
 
         httpSecurity.authorizeHttpRequests(request -> request
-        .anyRequest().permitAll());
+                .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
+                .requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                .anyRequest().authenticated()
+        );
 
-        // httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())));
+        httpSecurity.oauth2ResourceServer(oauth2 ->
+                oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder()))
+        );
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
         httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        // httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
     }

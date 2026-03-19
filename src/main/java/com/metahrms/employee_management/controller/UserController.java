@@ -132,7 +132,7 @@ public class UserController {
     )
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteUser(
-            @Parameter(description = "User ID", required = true, example = "1") @PathVariable Integer id) {
+            @Parameter(description = "User ID", required = true, example = "1") @PathVariable("id") Integer id) {
         userService.deleteUser(id);
 
         ApiResponse<Void> response = new ApiResponse<>();

@@ -20,6 +20,9 @@ public class EmployeeResponse {
     @Schema(description = "Full name of the employee", example = "Nguyen Van A")
     String fullName;
 
+    @Schema(description = "Email of the employee", example = "hr@gmail.com")
+    String email;
+
     @Schema(description = "Gender (MALE/FEMALE)", example = "MALE")
     String gender;
 
@@ -64,6 +67,7 @@ public class EmployeeResponse {
     public static class Builder {
         private Integer id;
         private String fullName;
+        private String email;
         private String gender;
         private String phoneNumber;
         private String department;
@@ -83,6 +87,11 @@ public class EmployeeResponse {
 
         public Builder fullName(String fullName) {
             this.fullName = fullName;
+            return this;
+        }
+
+        public Builder email(String email) {
+            this.email = email;
             return this;
         }
 
@@ -145,6 +154,7 @@ public class EmployeeResponse {
             EmployeeResponse response = new EmployeeResponse();
             response.id = this.id;
             response.fullName = this.fullName;
+            response.email = this.email;
             response.gender = this.gender;
             response.phoneNumber = this.phoneNumber;
             response.department = this.department;

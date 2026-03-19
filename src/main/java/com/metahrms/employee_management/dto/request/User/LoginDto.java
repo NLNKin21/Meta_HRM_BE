@@ -21,7 +21,7 @@ public class LoginDto {
   @Email(message = "Email should be valid")
   @Schema(
     description = "User's email address for authentication",
-    example = "admin@gmail.com",
+    example = "hr.manager@company.com",
     required = true
   )
   String email;
@@ -30,7 +30,7 @@ public class LoginDto {
   @Size(min = 8, message = "Password must be at least 8 characters")
   @Schema(
     description = "User's password (minimum 8 characters)",
-    example = "nhat123",
+    example = "12345678",
     required = true,
     minLength = 8
   )

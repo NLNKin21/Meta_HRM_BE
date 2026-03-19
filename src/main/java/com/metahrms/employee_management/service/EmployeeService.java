@@ -116,6 +116,11 @@ public class EmployeeService {
         userRepository.findById(createDto.getUserId())
             .orElseThrow(() -> new RuntimeException("User not found with id: " + createDto.getUserId()));
 
+        // Check if user is already linked to an employee
+        if (employeeRepository.findByUserId(createDto.getUserId()).isPresent()) {
+            throw new RuntimeException("User is already linked to an employee profile");
+        }
+
         // Validate department exists
         Department dept = departmentRepository.findById(createDto.getDeptId())
             .orElseThrow(() -> new RuntimeException("Department not found with id: " + createDto.getDeptId()));

@@ -11,6 +11,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -57,6 +60,10 @@ public class Employee extends BaseEntity {
     @Column(name = "role_in_dept", length = 20)
     private RoleInDepartment roleInDept = RoleInDepartment.STAFF;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "position_id")
+    private Position position;
+
 
     public static Builder builder() {
         return new Builder();
@@ -74,6 +81,7 @@ public class Employee extends BaseEntity {
         private BigDecimal basicSalary;
         private EmployeeStatus status;
         private RoleInDepartment roleInDept;
+        private Position position;
 
         public Builder userId(Integer userId) {
             this.userId = userId;
@@ -130,6 +138,11 @@ public class Employee extends BaseEntity {
             return this;
         }
 
+        public Builder position(Position position) {
+            this.position = position;
+            return this;
+        }
+
         public Employee build() {
             Employee employee = new Employee();
             employee.userId = this.userId;
@@ -143,6 +156,7 @@ public class Employee extends BaseEntity {
             employee.basicSalary = this.basicSalary;
             employee.status = this.status != null ? this.status : EmployeeStatus.ACTIVE;
             employee.roleInDept = this.roleInDept != null ? this.roleInDept : RoleInDepartment.STAFF;
+            employee.position = this.position;
             return employee;
         }
     }

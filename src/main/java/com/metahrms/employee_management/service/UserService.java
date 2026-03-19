@@ -16,6 +16,7 @@ import com.metahrms.employee_management.dto.request.User.UserFilterDto;
 import com.metahrms.employee_management.dto.request.User.UserUpdateDto;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.dto.response.User.UserResponse;
+import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.entity.User;
 import com.metahrms.employee_management.enums.UserRole;
 import com.metahrms.employee_management.enums.UserStatus;
@@ -181,6 +182,14 @@ public class UserService {
     }
 
     private UserResponse toUserResponse(User user) {
+        // Find the corresponding employee for the user
+        Employee employee = null;
+        try {
+            employee = employeeRepository.findByUserId(user.getId()).orElse(null);
+        } catch (Exception e) {
+            // Data corruption: Multiple employees found for one user. Ignore employee details to prevent crash.
+        }
+
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -188,7 +197,11 @@ public class UserService {
                 .role(user.getRole())
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
+                // Map additional fields from the Employee entity if it exists
+                .fullName(employee != null ? employee.getFullName() : null)
+                .gender(employee != null && employee.getGender() != null ? employee.getGender().name() : null)
+                .dob(employee != null ? employee.getDob() : null)
+                // 'country' is not available in the Employee entity, it will be null.
                 .build();
     }
 }
-
