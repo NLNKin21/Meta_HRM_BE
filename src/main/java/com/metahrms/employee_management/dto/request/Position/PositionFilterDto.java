@@ -6,9 +6,16 @@ import lombok.Data;
 @Data
 @Builder
 public class PositionFilterDto {
-    private int page;
-    private int pageSize;
+   
     private String search;
     private Integer deptId;
     private Boolean isActive;
+    private Integer parentPositionId; // Lọc theo parent
+    private Integer levelOrder;       // Lọc theo cấp bậc
+    // Pagination
+    @Builder.Default
+    private int page = 0;
+    
+    @Builder.Default
+    private int pageSize = 10;
 }

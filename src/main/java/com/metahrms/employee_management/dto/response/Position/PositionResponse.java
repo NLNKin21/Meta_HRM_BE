@@ -17,4 +17,11 @@ public class PositionResponse {
     private Boolean isActive;
     private Integer deptId;
     private String deptName;
+     // Parent position info
+    private Integer parentPositionId;
+    private String parentPositionName;
+    
+    // Ordering
+    private Integer levelOrder;
+    private Integer sortOrder;
 }

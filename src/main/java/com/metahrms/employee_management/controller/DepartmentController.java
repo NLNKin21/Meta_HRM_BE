@@ -18,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.AccessLevel;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +60,19 @@ public class DepartmentController {
                 .message("Get department successfully")
                 .data(department)
                 .build();
+    }
+
+    @Operation(
+        summary = "Get employees by department", 
+        description = "Retrieve a list of employees belonging to a specific department"
+    )
+    @GetMapping("/{id}/employees")
+    public ResponseEntity<ApiResponse<List<?>>> getEmployeesByDepartment(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(ApiResponse.<List<?>>builder()
+                .status("success")
+               .message("Get employees by department successfully")
+               .data(departmentService.getEmployeesByDepartmentId(id))
+                .build());
     }
 
 

@@ -43,15 +43,11 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
     void deleteById(Integer id);
 
     List<Employee> findByDeptId(Integer deptId);
-
-    // @Query("SELECT DISTINCT e FROM Employee e " +
-    //        "LEFT JOIN KpiResults kr ON (e.id = kr.empId AND kr.kpiPeriodId = :kpiPeriodId AND kr.isDeleted = false) " +
-    //        "WHERE e.isDeleted = false " +
-    //        "AND (:deptId IS NULL OR e.deptId = :deptId) " +
-    //        "AND kr.id IS NULL")
-    // List<Employee> findEmployeesWithoutKpiResults(
-    //     @Param("kpiPeriodId") Integer kpiPeriodId,
-    //     @Param("deptId") Integer deptId
-    // );
-
+    
+    // Lấy danh sách nhân viên sắp xếp theo cấp bậc position (levelOrder)
+    @Query("SELECT e FROM Employee e " +
+           "LEFT JOIN FETCH e.position p " +
+           "WHERE e.deptId = :deptId AND (e.isDeleted = false OR e.isDeleted IS NULL) " +
+           "ORDER BY COALESCE(p.levelOrder, 999) ASC, COALESCE(p.sortOrder, 999) ASC, e.fullName ASC")
+    List<Employee> findByDeptIdAndIsDeletedFalseOrderByPositionLevel(@Param("deptId") Integer deptId);
 }

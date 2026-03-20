@@ -25,4 +25,10 @@ public class PositionDto {
 
     @NotNull(message = "Department ID is required")
     private Integer deptId;
+
+    private Integer parentPositionId;
+    
+    private Integer levelOrder;
+    
+    private Integer sortOrder;
 }

@@ -21,7 +21,7 @@ public class LoginDto {
   @Email(message = "Email should be valid")
   @Schema(
     description = "User's email address for authentication",
-    example = "hr.manager@company.com",
+    example = "sales.director@techcorp.vn",
     required = true
   )
   String email;

@@ -120,66 +120,70 @@ INSERT INTO departments (id, created_at, is_deleted, updated_at, dept_name) VALU
 -- POSITIONS
 -- ============================================
 TRUNCATE TABLE positions;
-INSERT INTO positions (id, position_code, position_name, description, min_salary, max_salary, is_active, department_id, is_deleted) VALUES
--- Ban Giám đốc
-(1, 'CEO', 'Tổng Giám đốc', 'Điều hành toàn bộ hoạt động công ty', 80000000, 150000000, 1, 1, 0),
-(2, 'CTO', 'Giám đốc Công nghệ', 'Phụ trách chiến lược và phát triển công nghệ', 70000000, 120000000, 1, 1, 0),
-(3, 'CFO', 'Giám đốc Tài chính', 'Quản lý tài chính và kế toán toàn công ty', 70000000, 120000000, 1, 1, 0),
 
--- Phòng Nhân sự
-(4, 'HR_DIR', 'Giám đốc Nhân sự', 'Quản lý toàn bộ hoạt động nhân sự', 40000000, 60000000, 1, 2, 0),
-(5, 'HR_DEP', 'Phó phòng Nhân sự', 'Hỗ trợ Giám đốc Nhân sự', 30000000, 45000000, 1, 2, 0),
-(6, 'HR_REC', 'Chuyên viên Tuyển dụng', 'Thực hiện các hoạt động tuyển dụng', 15000000, 25000000, 1, 2, 0),
-(7, 'HR_TRN', 'Chuyên viên Đào tạo', 'Tổ chức các chương trình đào tạo', 15000000, 25000000, 1, 2, 0),
-(8, 'HR_PAY', 'Chuyên viên Tiền lương', 'Xử lý lương và phúc lợi', 15000000, 28000000, 1, 2, 0),
-(9, 'HR_ADM', 'Nhân viên Hành chính Nhân sự', 'Hỗ trợ hành chính phòng HR', 12000000, 18000000, 1, 2, 0),
+INSERT INTO positions 
+(position_code, position_name, department_id, parent_position_id, level_order, sort_order, is_active, is_deleted, created_at, updated_at)
+VALUES
 
--- Phòng IT
-(10, 'IT_DIR', 'Giám đốc CNTT', 'Quản lý phòng CNTT', 50000000, 80000000, 1, 3, 0),
-(11, 'IT_DEP', 'Phó phòng CNTT', 'Hỗ trợ Giám đốc CNTT', 40000000, 60000000, 1, 3, 0),
-(12, 'TECH_LEAD', 'Trưởng nhóm Kỹ thuật', 'Dẫn dắt đội ngũ phát triển', 35000000, 55000000, 1, 3, 0),
-(13, 'SEN_DEV', 'Lập trình viên Cao cấp', 'Phát triển và thiết kế phần mềm', 30000000, 50000000, 1, 3, 0),
-(14, 'MID_DEV', 'Lập trình viên', 'Phát triển phần mềm', 20000000, 35000000, 1, 3, 0),
-(15, 'JUN_DEV', 'Lập trình viên mới', 'Hỗ trợ phát triển phần mềm', 12000000, 20000000, 1, 3, 0),
-(16, 'DEVOPS', 'Kỹ sư DevOps', 'Quản lý hạ tầng và CI/CD', 30000000, 50000000, 1, 3, 0),
-(17, 'QA_LEAD', 'Trưởng nhóm QA', 'Quản lý chất lượng phần mềm', 30000000, 45000000, 1, 3, 0),
-(18, 'QA_ENG', 'Kỹ sư QA', 'Kiểm thử phần mềm', 18000000, 30000000, 1, 3, 0),
-(19, 'IT_INTERN', 'Thực tập sinh IT', 'Thực tập phát triển phần mềm', 5000000, 10000000, 1, 3, 0),
+-- ================= LEVEL 1 =================
+('CEO', 'Tổng Giám đốc', 1, NULL, 1, 1, TRUE, FALSE, NOW(), NOW()),
 
--- Phòng Tài chính - Kế toán
-(20, 'FIN_DIR', 'Trưởng phòng Tài chính', 'Quản lý phòng Tài chính', 40000000, 60000000, 1, 4, 0),
-(21, 'FIN_DEP', 'Phó phòng Tài chính', 'Hỗ trợ Trưởng phòng', 30000000, 45000000, 1, 4, 0),
-(22, 'CHIEF_ACC', 'Kế toán trưởng', 'Phụ trách kế toán toàn công ty', 35000000, 50000000, 1, 4, 0),
-(23, 'ACCOUNTANT', 'Kế toán viên', 'Thực hiện công việc kế toán', 15000000, 28000000, 1, 4, 0),
-(24, 'TAX_SPEC', 'Chuyên viên Thuế', 'Xử lý thuế và báo cáo thuế', 18000000, 32000000, 1, 4, 0),
-(25, 'CASHIER', 'Thủ quỹ', 'Quản lý tiền mặt', 12000000, 20000000, 1, 4, 0),
+-- ================= LEVEL 2 =================
+('CTO', 'Giám đốc Công nghệ', 3, 1, 2, 1, TRUE, FALSE, NOW(), NOW()),
+('CFO', 'Giám đốc Tài chính', 4, 1, 2, 2, TRUE, FALSE, NOW(), NOW()),
+('HR_DIR', 'Giám đốc Nhân sự', 2, 1, 2, 3, TRUE, FALSE, NOW(), NOW()),
+('SALES_DIR', 'Giám đốc Kinh doanh', 5, 1, 2, 4, TRUE, FALSE, NOW(), NOW()),
+('MKT_DIR', 'Giám đốc Marketing', 6, 1, 2, 5, TRUE, FALSE, NOW(), NOW()),
+('OPS_DIR', 'Trưởng phòng Vận hành', 7, 1, 2, 6, TRUE, FALSE, NOW(), NOW()),
+('RD_DIR', 'Giám đốc R&D', 8, 1, 2, 7, TRUE, FALSE, NOW(), NOW()),
 
--- Phòng Kinh doanh
-(26, 'SALES_DIR', 'Giám đốc Kinh doanh', 'Quản lý hoạt động kinh doanh', 45000000, 70000000, 1, 5, 0),
-(27, 'SALES_DEP', 'Phó phòng Kinh doanh', 'Hỗ trợ Giám đốc Kinh doanh', 35000000, 55000000, 1, 5, 0),
-(28, 'SALES_LEAD', 'Trưởng nhóm Kinh doanh', 'Quản lý đội ngũ bán hàng khu vực', 28000000, 45000000, 1, 5, 0),
-(29, 'SALES_EXEC', 'Chuyên viên Kinh doanh', 'Bán hàng và chăm sóc khách hàng', 15000000, 35000000, 1, 5, 0),
-(30, 'PRESALES', 'Chuyên viên Pre-sales', 'Hỗ trợ kỹ thuật trước bán hàng', 20000000, 35000000, 1, 5, 0),
-(31, 'SALES_SUP', 'Nhân viên Hỗ trợ Kinh doanh', 'Hỗ trợ hành chính kinh doanh', 12000000, 20000000, 1, 5, 0),
+-- ================= IT =================
+('IT_DEP', 'Phó phòng CNTT', 3, 2, 3, 1, TRUE, FALSE, NOW(), NOW()),
+('TECH_LEAD', 'Trưởng nhóm Kỹ thuật', 3, 9, 4, 1, TRUE, FALSE, NOW(), NOW()),
+('SEN_DEV', 'Senior Developer', 3, 10, 5, 1, TRUE, FALSE, NOW(), NOW()),
+('MID_DEV', 'Mid Developer', 3, 10, 5, 2, TRUE, FALSE, NOW(), NOW()),
+('JUN_DEV', 'Junior Developer', 3, 10, 6, 1, TRUE, FALSE, NOW(), NOW()),
+('DEVOPS', 'DevOps Engineer', 3, 9, 4, 2, TRUE, FALSE, NOW(), NOW()),
+('QA_LEAD', 'QA Lead', 3, 9, 4, 3, TRUE, FALSE, NOW(), NOW()),
+('QA_ENG', 'QA Engineer', 3, 15, 5, 1, TRUE, FALSE, NOW(), NOW()),
+('IT_INTERN', 'Intern IT', 3, 10, 7, 1, TRUE, FALSE, NOW(), NOW()),
 
--- Phòng Marketing
-(32, 'MKT_DIR', 'Giám đốc Marketing', 'Quản lý hoạt động marketing', 40000000, 65000000, 1, 6, 0),
-(33, 'DIGITAL_MKT', 'Chuyên viên Digital Marketing', 'Marketing số', 18000000, 32000000, 1, 6, 0),
-(34, 'CONTENT_MKT', 'Chuyên viên Nội dung', 'Sáng tạo nội dung', 15000000, 28000000, 1, 6, 0),
-(35, 'DESIGNER', 'Nhân viên Thiết kế', 'Thiết kế đồ họa', 15000000, 30000000, 1, 6, 0),
-(36, 'SEO_SPEC', 'Chuyên viên SEO', 'Tối ưu hóa công cụ tìm kiếm', 15000000, 28000000, 1, 6, 0),
-(37, 'EVENT_COORD', 'Chuyên viên Sự kiện', 'Tổ chức sự kiện', 14000000, 25000000, 1, 6, 0),
+-- ================= HR =================
+('HR_DEP', 'Phó phòng Nhân sự', 2, 4, 3, 1, TRUE, FALSE, NOW(), NOW()),
+('HR_REC', 'Chuyên viên Tuyển dụng', 2, 18, 4, 1, TRUE, FALSE, NOW(), NOW()),
+('HR_TRN', 'Chuyên viên Đào tạo', 2, 18, 4, 2, TRUE, FALSE, NOW(), NOW()),
+('HR_PAY', 'Chuyên viên Tiền lương', 2, 18, 4, 3, TRUE, FALSE, NOW(), NOW()),
+('HR_ADM', 'Hành chính Nhân sự', 2, 18, 4, 4, TRUE, FALSE, NOW(), NOW()),
 
--- Phòng Vận hành
-(38, 'OPS_DIR', 'Trưởng phòng Vận hành', 'Quản lý vận hành công ty', 35000000, 55000000, 1, 7, 0),
-(39, 'OPS_DEP', 'Phó phòng Vận hành', 'Hỗ trợ Trưởng phòng', 28000000, 42000000, 1, 7, 0),
-(40, 'OPS_STAFF', 'Nhân viên Vận hành', 'Thực hiện công việc vận hành', 12000000, 22000000, 1, 7, 0),
-(41, 'RECEPTION', 'Lễ tân', 'Tiếp đón khách và hỗ trợ hành chính', 10000000, 16000000, 1, 7, 0),
-(42, 'DRIVER', 'Tài xế', 'Lái xe công ty', 10000000, 18000000, 1, 7, 0),
+-- ================= FINANCE =================
+('FIN_DEP', 'Phó phòng Tài chính', 4, 3, 3, 1, TRUE, FALSE, NOW(), NOW()),
+('CHIEF_ACC', 'Kế toán trưởng', 4, 23, 4, 1, TRUE, FALSE, NOW(), NOW()),
+('ACCOUNTANT', 'Kế toán viên', 4, 24, 5, 1, TRUE, FALSE, NOW(), NOW()),
+('TAX_SPEC', 'Chuyên viên Thuế', 4, 24, 5, 2, TRUE, FALSE, NOW(), NOW()),
+('CASHIER', 'Thủ quỹ', 4, 24, 5, 3, TRUE, FALSE, NOW(), NOW()),
 
--- Phòng R&D
-(43, 'RD_DIR', 'Giám đốc R&D', 'Quản lý nghiên cứu và phát triển', 50000000, 80000000, 1, 8, 0),
-(44, 'RESEARCHER', 'Nghiên cứu viên', 'Nghiên cứu công nghệ mới', 25000000, 45000000, 1, 8, 0);
+-- ================= SALES =================
+('SALES_DEP', 'Phó phòng Kinh doanh', 5, 5, 3, 1, TRUE, FALSE, NOW(), NOW()),
+('SALES_LEAD', 'Trưởng nhóm Kinh doanh', 5, 29, 4, 1, TRUE, FALSE, NOW(), NOW()),
+('SALES_EXEC', 'Nhân viên Kinh doanh', 5, 30, 5, 1, TRUE, FALSE, NOW(), NOW()),
+('PRESALES', 'Pre-sales', 5, 29, 4, 2, TRUE, FALSE, NOW(), NOW()),
+('SALES_SUP', 'Hỗ trợ Kinh doanh', 5, 29, 4, 3, TRUE, FALSE, NOW(), NOW()),
+
+-- ================= MARKETING =================
+('DIGITAL_MKT', 'Digital Marketing', 6, 6, 3, 1, TRUE, FALSE, NOW(), NOW()),
+('CONTENT_MKT', 'Content Marketing', 6, 6, 3, 2, TRUE, FALSE, NOW(), NOW()),
+('DESIGNER', 'Designer', 6, 6, 3, 3, TRUE, FALSE, NOW(), NOW()),
+('SEO_SPEC', 'SEO Specialist', 6, 6, 3, 4, TRUE, FALSE, NOW(), NOW()),
+('EVENT_COORD', 'Event Coordinator', 6, 6, 3, 5, TRUE, FALSE, NOW(), NOW()),
+
+-- ================= OPERATIONS =================
+('OPS_DEP', 'Phó phòng Vận hành', 7, 7, 3, 1, TRUE, FALSE, NOW(), NOW()),
+('OPS_STAFF', 'Nhân viên Vận hành', 7, 38, 4, 1, TRUE, FALSE, NOW(), NOW()),
+('RECEPTION', 'Lễ tân', 7, 38, 4, 2, TRUE, FALSE, NOW(), NOW()),
+('DRIVER', 'Tài xế', 7, 38, 4, 3, TRUE, FALSE, NOW(), NOW()),
+
+-- ================= R&D =================
+('RESEARCHER', 'Nghiên cứu viên', 8, 8, 3, 1, TRUE, FALSE, NOW(), NOW());
 
 -- ============================================
 -- EMPLOYEES (60 nhân sự)

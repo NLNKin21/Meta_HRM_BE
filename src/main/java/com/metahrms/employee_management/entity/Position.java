@@ -36,6 +36,22 @@ public class Position extends BaseEntity {
     private Boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_position_id")
+    private Position parentPosition;
+
+    @OneToMany(mappedBy = "parentPosition", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<Position> childPositions = new ArrayList<>();
+
+    @Column(name = "level_order")
+    @Builder.Default
+    private Integer levelOrder = 6;
+
+    @Column(name = "sort_order")
+    @Builder.Default
+    private Integer sortOrder = 1;
+     
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
 

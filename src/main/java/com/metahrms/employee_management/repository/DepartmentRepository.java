@@ -11,10 +11,8 @@ import com.metahrms.employee_management.entity.Department;
 @Repository
 public interface DepartmentRepository extends JpaRepository<Department, Integer> {
     List<Department> findByIsDeletedFalse();
+    
     Optional<Department> findByDeptName(String deptName);
-
-    // Dashboard queries
-    Long countByIsDeleted(boolean isDeleted);
-
-    List<Department> findByIsDeleted(boolean isDeleted);
+    
+    Optional<Department> findByDeptNameAndIsDeletedFalse(String deptName);
 }
