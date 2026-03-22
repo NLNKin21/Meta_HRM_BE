@@ -1,5 +1,6 @@
 package com.metahrms.employee_management.dto.response.Employee;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -54,6 +55,9 @@ public class EmployeeResponse {
 
     @Schema(description = "Associated username", example = "nguyenvana")
     String username;
+    
+    @Schema(description = "basic Salary", example = "100000")
+    BigDecimal basicSalary;
 
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
@@ -78,6 +82,7 @@ public class EmployeeResponse {
         private String roleInDept;
         private String status;
         private String username;
+        private BigDecimal basicSalary;
         private LocalDateTime createdAt;
 
         public Builder id(Integer id) {
@@ -145,6 +150,11 @@ public class EmployeeResponse {
             return this;
         }
 
+        public Builder basicSalary(BigDecimal basicSalary) {
+            this.basicSalary = basicSalary;
+            return this;
+        }
+
         public Builder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -165,6 +175,7 @@ public class EmployeeResponse {
             response.roleInDept = this.roleInDept;
             response.status = this.status;
             response.username = this.username;
+            response.basicSalary = this.basicSalary;
             response.createdAt = this.createdAt;
             return response;
         }

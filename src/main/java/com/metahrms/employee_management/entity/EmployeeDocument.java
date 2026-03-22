@@ -3,28 +3,35 @@ package com.metahrms.employee_management.entity;
 import com.metahrms.employee_management.enums.DocumentType;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "employee_documents")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class EmployeeDocument extends BaseEntity {
 
-    @Column(name = "emp_id")
+    @Column(name = "emp_id", nullable = false)
     private Integer empId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "doc_type", length = 100)
+    @Column(name = "doc_type", nullable = false, length = 50)
     private DocumentType docType;
 
-    @Column(name = "file_url", length = 255)
+    @Column(name = "file_url", length = 500)
     private String fileUrl;
+
+    @Column(name = "file_key", length = 255)  // ✅ Thêm field
+    private String fileKey;
 
     @Column(name = "original_name", length = 255)
     private String originalName;
@@ -32,6 +39,7 @@ public class EmployeeDocument extends BaseEntity {
     @Column(name = "file_size")
     private Long fileSize;
 
+    // ✅ Custom Builder
     public static Builder builder() {
         return new Builder();
     }
@@ -40,6 +48,7 @@ public class EmployeeDocument extends BaseEntity {
         private Integer empId;
         private DocumentType docType;
         private String fileUrl;
+        private String fileKey;
         private String originalName;
         private Long fileSize;
 
@@ -58,6 +67,11 @@ public class EmployeeDocument extends BaseEntity {
             return this;
         }
 
+        public Builder fileKey(String fileKey) {
+            this.fileKey = fileKey;
+            return this;
+        }
+
         public Builder originalName(String originalName) {
             this.originalName = originalName;
             return this;
@@ -69,13 +83,14 @@ public class EmployeeDocument extends BaseEntity {
         }
 
         public EmployeeDocument build() {
-            EmployeeDocument employeeDocument = new EmployeeDocument();
-            employeeDocument.empId = this.empId;
-            employeeDocument.docType = this.docType;
-            employeeDocument.fileUrl = this.fileUrl;
-            employeeDocument.originalName = this.originalName;
-            employeeDocument.fileSize = this.fileSize;
-            return employeeDocument;
+            EmployeeDocument document = new EmployeeDocument();
+            document.empId = this.empId;
+            document.docType = this.docType;
+            document.fileUrl = this.fileUrl;
+            document.fileKey = this.fileKey;
+            document.originalName = this.originalName;
+            document.fileSize = this.fileSize;
+            return document;
         }
     }
 }

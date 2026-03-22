@@ -1,5 +1,6 @@
 package com.metahrms.employee_management.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.metahrms.employee_management.dto.request.Contract.ContractCreateDto;
 import com.metahrms.employee_management.dto.request.Contract.ContractFilterDto;
@@ -18,6 +21,7 @@ import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.entity.Contract;
 import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.enums.ContractStatus;
+import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.repository.ContractRepository;
 import com.metahrms.employee_management.repository.EmployeeRepository;
 import com.metahrms.employee_management.specification.ContractSpecification;
@@ -25,16 +29,23 @@ import com.metahrms.employee_management.specification.ContractSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class ContractService {
     ContractRepository contractRepository;
     EmployeeRepository employeeRepository;
-    S3Service s3Service;
+    CloudinaryService cloudinaryService;
 
+    /**
+     * Get contracts with filtering and pagination
+     */
     public PagedResponse<ContractResponse> getContracts(ContractFilterDto filterDto) {
+        log.info("Fetching contracts with filters: {}", filterDto);
+
         // Build specification for filtering
         Specification<Contract> spec = ContractSpecification.filterContracts(
             filterDto.getStatus(),
@@ -68,45 +79,77 @@ public class ContractService {
             .build();
     }
 
+    /**
+     * Get contract by ID
+     */
     public ContractResponse getContractById(Integer id) {
-        Contract contract = contractRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Contract not found with id: " + id));
+        log.info("Fetching contract with id: {}", id);
 
-        if (contract.getIsDeleted()) {
-            throw new RuntimeException("Contract has been deleted");
+        Contract contract = contractRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + id));
+
+        if (Boolean.TRUE.equals(contract.getIsDeleted())) {
+            throw new ResourceNotFoundException("Contract has been deleted");
         }
 
         return toContractResponse(contract);
     }
 
-    public ContractResponse createContract(ContractCreateDto createDto) {
-        // Validate employee exists
-        employeeRepository.findById(createDto.getEmpId())
-            .orElseThrow(() -> new RuntimeException("Employee not found with id: " + createDto.getEmpId()));
+    /**
+     * Create contract with file upload
+     */
+    @Transactional
+    public ContractResponse createContract(ContractCreateDto createDto, MultipartFile file) throws IOException {
+        log.info("Creating contract for employee: {}", createDto.getEmpId());
 
+        // ✅ Validate employee exists
+        Employee employee = employeeRepository.findById(createDto.getEmpId())
+            .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + createDto.getEmpId()));
+
+        // ✅ Upload file to Cloudinary (if provided)
+        String fileUrl = null;
+        String fileKey = null;
+
+        if (file != null && !file.isEmpty()) {
+            fileUrl = cloudinaryService.uploadFile(file);
+            fileKey = cloudinaryService.extractPublicId(fileUrl);
+            log.info("File uploaded successfully: {}", fileUrl);
+        }
+
+        // ✅ Create contract entity
         Contract contract = Contract.builder()
             .empId(createDto.getEmpId())
             .contractType(createDto.getContractType())
             .startDate(createDto.getStartDate())
             .endDate(createDto.getEndDate())
-            .fileUrl(createDto.getFileUrl())
+            .fileUrl(fileUrl)
+            .fileKey(fileKey)  // ✅ Lưu public_id để xóa sau
             .status(createDto.getStatus() != null ? createDto.getStatus() : ContractStatus.ACTIVE)
             .build();
 
         contract.setIsDeleted(false);
 
         Contract savedContract = contractRepository.save(contract);
+        log.info("Contract created successfully with id: {}", savedContract.getId());
+
         return toContractResponse(savedContract);
     }
 
-    public ContractResponse updateContract(Integer id, ContractUpdateDto updateDto) {
-        Contract contract = contractRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Contract not found with id: " + id));
+    /**
+     * Update contract (including file replacement)
+     */
+    @Transactional
+    public ContractResponse updateContract(Integer id, ContractUpdateDto updateDto, MultipartFile file) throws IOException {
+        log.info("Updating contract with id: {}", id);
 
-        if (contract.getIsDeleted()) {
-            throw new RuntimeException("Cannot update deleted contract");
+        Contract contract = contractRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + id));
+
+        if (Boolean.TRUE.equals(contract.getIsDeleted())) {
+            throw new IllegalStateException("Cannot update deleted contract");
         }
 
+        // ✅ Update basic fields
         if (updateDto.getContractType() != null) {
             contract.setContractType(updateDto.getContractType());
         }
@@ -116,27 +159,69 @@ public class ContractService {
         if (updateDto.getEndDate() != null) {
             contract.setEndDate(updateDto.getEndDate());
         }
-        if (updateDto.getFileUrl() != null) {
-            contract.setFileUrl(updateDto.getFileUrl());
-        }
         if (updateDto.getStatus() != null) {
             contract.setStatus(updateDto.getStatus());
         }
 
+        // ✅ Update file (nếu có file mới)
+        if (file != null && !file.isEmpty()) {
+            // Xóa file cũ trên Cloudinary (nếu có)
+            if (contract.getFileKey() != null && !contract.getFileKey().isEmpty()) {
+                try {
+                    cloudinaryService.deleteFile(contract.getFileKey());
+                    log.info("Old file deleted: {}", contract.getFileKey());
+                } catch (IOException e) {
+                    log.warn("Failed to delete old file: {}", e.getMessage());
+                }
+            }
+
+            // Upload file mới
+            String newFileUrl = cloudinaryService.uploadFile(file);
+            String newFileKey = cloudinaryService.extractPublicId(newFileUrl);
+
+            contract.setFileUrl(newFileUrl);
+            contract.setFileKey(newFileKey);
+            log.info("New file uploaded: {}", newFileUrl);
+        }
+
         Contract updatedContract = contractRepository.save(contract);
+        log.info("Contract updated successfully: {}", id);
+
         return toContractResponse(updatedContract);
     }
 
-    public void deleteContract(Integer id) {
-        Contract contract = contractRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Contract not found with id: " + id));
+    /**
+     * Soft delete contract (and delete file from Cloudinary)
+     */
+    @Transactional
+    public void deleteContract(Integer id) throws IOException {
+        log.info("Deleting contract with id: {}", id);
 
-        // Soft delete
+        Contract contract = contractRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + id));
+
+        // ✅ Xóa file trên Cloudinary (nếu có)
+        if (contract.getFileKey() != null && !contract.getFileKey().isEmpty()) {
+            try {
+                cloudinaryService.deleteFile(contract.getFileKey());
+                log.info("File deleted from Cloudinary: {}", contract.getFileKey());
+            } catch (IOException e) {
+                log.error("Failed to delete file from Cloudinary: {}", e.getMessage());
+                // Vẫn tiếp tục soft delete contract
+            }
+        }
+
+        // ✅ Soft delete contract
         contract.setIsDeleted(true);
         contractRepository.save(contract);
+        log.info("Contract soft deleted successfully: {}", id);
     }
 
-    public ContractResponse toContractResponse(Contract contract) {
+    
+    /**
+     * Convert Contract entity to ContractResponse DTO
+     */
+    private ContractResponse toContractResponse(Contract contract) {
         // Get employee information
         String employeeName = null;
         if (contract.getEmpId() != null) {
@@ -152,7 +237,8 @@ public class ContractService {
             .contractType(contract.getContractType() != null ? contract.getContractType().name() : null)
             .startDate(contract.getStartDate())
             .endDate(contract.getEndDate())
-            .fileUrl(s3Service.getS3Url(contract.getFileUrl()))
+            .fileUrl(contract.getFileUrl())  // ✅ Trả về URL trực tiếp từ Cloudinary
+            .fileKey(contract.getFileKey())  // ✅ Thêm fileKey cho frontend
             .status(contract.getStatus() != null ? contract.getStatus().name() : null)
             .createdAt(contract.getCreatedAt())
             .build();

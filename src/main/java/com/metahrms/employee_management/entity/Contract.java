@@ -10,20 +10,24 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "contracts")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class Contract extends BaseEntity {
 
-    @Column(name = "emp_id")
+    @Column(name = "emp_id", nullable = false)
     private Integer empId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "contract_type", length = 50)
+    @Column(name = "contract_type", nullable = false, length = 50)
     private ContractType contractType;
 
     @Column(name = "start_date")
@@ -32,13 +36,17 @@ public class Contract extends BaseEntity {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Column(name = "file_url", length = 255)
+    @Column(name = "file_url", length = 500)  // ✅ Tăng lên 500 (Cloudinary URL dài)
     private String fileUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private ContractStatus status = ContractStatus.ACTIVE;
+    @Column(name = "file_key", length = 255)  // ✅ Thêm field lưu Cloudinary public_id
+    private String fileKey;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private ContractStatus status;
+
+    // ✅ Custom Builder (giữ nguyên logic của bạn)
     public static Builder builder() {
         return new Builder();
     }
@@ -49,6 +57,7 @@ public class Contract extends BaseEntity {
         private LocalDate startDate;
         private LocalDate endDate;
         private String fileUrl;
+        private String fileKey;  // ✅ Thêm vào builder
         private ContractStatus status;
 
         public Builder empId(Integer empId) {
@@ -76,6 +85,11 @@ public class Contract extends BaseEntity {
             return this;
         }
 
+        public Builder fileKey(String fileKey) {  // ✅ Thêm method
+            this.fileKey = fileKey;
+            return this;
+        }
+
         public Builder status(ContractStatus status) {
             this.status = status;
             return this;
@@ -88,6 +102,7 @@ public class Contract extends BaseEntity {
             contract.startDate = this.startDate;
             contract.endDate = this.endDate;
             contract.fileUrl = this.fileUrl;
+            contract.fileKey = this.fileKey;  // ✅ Set fileKey
             contract.status = this.status != null ? this.status : ContractStatus.ACTIVE;
             return contract;
         }

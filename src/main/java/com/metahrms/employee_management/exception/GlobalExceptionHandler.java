@@ -1,109 +1,154 @@
-// package com.metahrms.employee_management.exception;
+package com.metahrms.employee_management.exception;
 
-// import com.metahrms.employee_management.dto.response.ApiResponse;
-// import jakarta.servlet.http.HttpServletRequest;
-// import lombok.extern.slf4j.Slf4j;
-// import org.springframework.http.HttpStatus;
-// import org.springframework.http.ResponseEntity;
-// import org.springframework.security.access.AccessDeniedException;
-// import org.springframework.security.authentication.BadCredentialsException;
-// import org.springframework.validation.FieldError;
-// import org.springframework.web.bind.MethodArgumentNotValidException;
-// import org.springframework.web.bind.annotation.ExceptionHandler;
-// import org.springframework.web.bind.annotation.RestControllerAdvice;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
-// import java.time.LocalDateTime;
-// import java.util.HashMap;
-// import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
-// @RestControllerAdvice
-// @Slf4j
-// public class GlobalExceptionHandler {
+import com.metahrms.employee_management.dto.response.ApiResponse;
 
-//     @ExceptionHandler(ResourceNotFoundException.class)
-//     public ResponseEntity<ApiResponse<Void>> handleResourceNotFoundException(
-//             ResourceNotFoundException ex, HttpServletRequest request) {
-//         log.error("Resource not found: {}", ex.getMessage());
-//         ApiResponse<Void> response = ApiResponse.<Void>builder()
-//                 .status("error")
-//                 .message(ex.getMessage())
-//                 .timestamp(LocalDateTime.now())
-//                 .path(request.getRequestURI())
-//                 .build();
-//         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-//     }
+import lombok.extern.slf4j.Slf4j;
 
-//     @ExceptionHandler(BadRequestException.class)
-//     public ResponseEntity<ApiResponse<Void>> handleBadRequestException(
-//             BadRequestException ex, HttpServletRequest request) {
-//         log.error("Bad request: {}", ex.getMessage());
-//         ApiResponse<Void> response = ApiResponse.<Void>builder()
-//                 .status("error")
-//                 .message(ex.getMessage())
-//                 .timestamp(LocalDateTime.now())
-//                 .path(request.getRequestURI())
-//                 .build();
-//         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-//     }
+@RestControllerAdvice
+@Slf4j
+public class GlobalExceptionHandler {
 
-//     @ExceptionHandler(MethodArgumentNotValidException.class)
-//     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
-//             MethodArgumentNotValidException ex, HttpServletRequest request) {
-//         log.error("Validation error: {}", ex.getMessage());
+    /**
+     * Handle ResourceNotFoundException (404)
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(
+            ResourceNotFoundException ex, 
+            WebRequest request) {
         
-//         Map<String, String> errors = new HashMap<>();
-//         ex.getBindingResult().getAllErrors().forEach(error -> {
-//             String fieldName = ((FieldError) error).getField();
-//             String errorMessage = error.getDefaultMessage();
-//             errors.put(fieldName, errorMessage);
-//         });
+        log.error("Resource not found: {} | Path: {}", 
+                  ex.getMessage(), 
+                  request.getDescription(false));
+        
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+            .code(404)
+            .status("error")
+            .message(ex.getMessage())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 
-//         ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
-//                 .status("error")
-//                 .message("Validation failed")
-//                 .data(errors)
-//                 .timestamp(LocalDateTime.now())
-//                 .path(request.getRequestURI())
-//                 .build();
-//         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-//     }
+    /**
+     * Handle IllegalStateException (400)
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalState(
+            IllegalStateException ex,
+            WebRequest request) {
+        
+        log.error("Illegal state: {} | Path: {}", 
+                  ex.getMessage(), 
+                  request.getDescription(false));
+        
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+            .code(400)
+            .status("error")
+            .message(ex.getMessage())
+            .build();
+        
+        return ResponseEntity.badRequest().body(response);
+    }
 
-//     @ExceptionHandler(BadCredentialsException.class)
-//     public ResponseEntity<ApiResponse<Void>> handleBadCredentialsException(
-//             BadCredentialsException ex, HttpServletRequest request) {
-//         log.error("Authentication failed: {}", ex.getMessage());
-//         ApiResponse<Void> response = ApiResponse.<Void>builder()
-//                 .status("error")
-//                 .message("Invalid username or password")
-//                 .timestamp(LocalDateTime.now())
-//                 .path(request.getRequestURI())
-//                 .build();
-//         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-//     }
+    /**
+     * Handle IllegalArgumentException (400)
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(
+            IllegalArgumentException ex,
+            WebRequest request) {
+        
+        log.error("Illegal argument: {} | Path: {}", 
+                  ex.getMessage(), 
+                  request.getDescription(false));
+        
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+            .code(400)
+            .status("error")
+            .message(ex.getMessage())
+            .build();
+        
+        return ResponseEntity.badRequest().body(response);
+    }
 
-//     @ExceptionHandler(AccessDeniedException.class)
-//     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
-//             AccessDeniedException ex, HttpServletRequest request) {
-//         log.error("Access denied: {}", ex.getMessage());
-//         ApiResponse<Void> response = ApiResponse.<Void>builder()
-//                 .status("error")
-//                 .message("Access denied. You don't have permission to access this resource.")
-//                 .timestamp(LocalDateTime.now())
-//                 .path(request.getRequestURI())
-//                 .build();
-//         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-//     }
+    /**
+     * Handle Validation Errors (400)
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationErrors(
+            MethodArgumentNotValidException ex) {
+        
+        log.error("Validation failed: {}", ex.getMessage());
+        
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
 
-//     @ExceptionHandler(Exception.class)
-//     public ResponseEntity<ApiResponse<Void>> handleGenericException(
-//             Exception ex, HttpServletRequest request) {
-//         log.error("Unexpected error occurred: ", ex);
-//         ApiResponse<Void> response = ApiResponse.<Void>builder()
-//                 .status("error")
-//                 .message("An unexpected error occurred. Please try again later.")
-//                 .timestamp(LocalDateTime.now())
-//                 .path(request.getRequestURI())
-//                 .build();
-//         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//     }
-// }
+        ApiResponse<Map<String, String>> response = ApiResponse.<Map<String, String>>builder()
+            .code(400)
+            .status("error")
+            .message("Validation failed")
+            .data(errors)
+            .build();
+        
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    /**
+     * Handle IOException (from file upload/delete) - 500
+     */
+    @ExceptionHandler(java.io.IOException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIOException(
+            java.io.IOException ex,
+            WebRequest request) {
+        
+        log.error("IO Exception: {} | Path: {}", 
+                  ex.getMessage(), 
+                  request.getDescription(false));
+        
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+            .code(500)
+            .status("error")
+            .message("File operation failed: " + ex.getMessage())
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    /**
+     * Handle all other exceptions (500)
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGeneralException(
+            Exception ex,
+            WebRequest request) {
+        
+        log.error("Unexpected error: {} | Path: {} | Stack trace:", 
+                  ex.getMessage(), 
+                  request.getDescription(false), 
+                  ex);
+        
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+            .code(500)
+            .status("error")
+            .message("An unexpected error occurred. Please contact support.")
+            .build();
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+}

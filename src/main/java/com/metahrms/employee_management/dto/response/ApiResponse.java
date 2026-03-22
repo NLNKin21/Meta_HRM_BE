@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Generic API response wrapper for all endpoints")
 public class ApiResponse<T> {
+    
     @Schema(description = "HTTP status code", example = "200")
     int code;
 
@@ -28,6 +29,7 @@ public class ApiResponse<T> {
     @Schema(description = "Response data payload (generic type)")
     T data;
 
+    // ✅ Giữ nguyên Builder của bạn
     public static <T> Builder<T> builder() {
         return new Builder<>();
     }
@@ -66,5 +68,71 @@ public class ApiResponse<T> {
             response.data = this.data;
             return response;
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ✅ THÊM: Helper Methods (để dùng nhanh trong Controller)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Success response với data và message
+     */
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return ApiResponse.<T>builder()
+            .code(200)
+            .status("success")
+            .message(message)
+            .data(data)
+            .build();
+    }
+
+    /**
+     * Success response với data (message mặc định)
+     */
+    public static <T> ApiResponse<T> success(T data) {
+        return success(data, "Operation completed successfully");
+    }
+
+    /**
+     * Success response không có data
+     */
+    public static <T> ApiResponse<T> successMessage(String message) {
+        return ApiResponse.<T>builder()
+            .code(200)
+            .status("success")
+            .message(message)
+            .build();
+    }
+
+    /**
+     * Error response với code và message
+     */
+    public static <T> ApiResponse<T> error(int code, String message) {
+        return ApiResponse.<T>builder()
+            .code(code)
+            .status("error")
+            .message(message)
+            .build();
+    }
+
+    /**
+     * Error response 400 Bad Request
+     */
+    public static <T> ApiResponse<T> badRequest(String message) {
+        return error(400, message);
+    }
+
+    /**
+     * Error response 404 Not Found
+     */
+    public static <T> ApiResponse<T> notFound(String message) {
+        return error(404, message);
+    }
+
+    /**
+     * Error response 500 Server Error
+     */
+    public static <T> ApiResponse<T> serverError(String message) {
+        return error(500, message);
     }
 }

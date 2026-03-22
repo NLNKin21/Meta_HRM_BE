@@ -1,9 +1,11 @@
 package com.metahrms.employee_management.enums;
 
 public enum ContractType {
-    PROBATION,      // Thử việc
-    PART_TIME,
-    FULL_TIME,      // Chính thức
-    INTERNSHIP,     // Thực tập sinh
-    SEASONAL,       // Thời vụ
+    PERMANENT,  // Hợp đồng vô thời hạn
+    DEFINITE,   // Hợp đồng có thời hạn
+    PROBATION,  // Thử việc
+    SEASONAL,   // Thời vụ
+    PART_TIME,  // Bán thời gian
+    INTERNSHIP, // Thực tập
+    FULL_TIME   // Toàn thời gian
 }

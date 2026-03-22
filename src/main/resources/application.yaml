@@ -87,13 +87,16 @@ jwt:
   refresh-expiration: 604800000 # 7 days
 
 # ==========================================
-# AWS S3 CONFIGURATION
+# CLOUDINARY CONFIGURATION
 # ==========================================
-aws:
-  accessKeyId: ${AWS_ACCESS_KEY:your-access-key}
-  secretAccessKey: ${AWS_SECRET_KEY:your-secret-key}
-  region: ${AWS_S3_REGION:ap-southeast-1}
-  bucketName: ${AWS_S3_BUCKET:employee-management-bucket}
+cloudinary:
+  cloud-name: dyjfpbj5e
+  api-key: ${CLOUDINARY_API_KEY:727988751731697}
+  api-secret: ${CLOUDINARY_API_SECRET:90vVKuoLKhSDd_73ptX62A139Cc}
+  folder: MetaHRM                           # Thư mục lưu file trên Cloudinary
+  max-file-size: 10485760                          # 10MB
+  
+
 
 # ==========================================
 # SWAGGER/OPENAPI CONFIGURATION
