@@ -15,18 +15,19 @@ import com.metahrms.employee_management.dto.request.User.RegisterUserDto;
 import com.metahrms.employee_management.dto.request.User.UserFilterDto;
 import com.metahrms.employee_management.dto.request.User.UserUpdateDto;
 import com.metahrms.employee_management.dto.response.PagedResponse;
+import com.metahrms.employee_management.dto.response.Position.PositionResponse;
 import com.metahrms.employee_management.dto.response.User.UserResponse;
 import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.entity.User;
 import com.metahrms.employee_management.enums.UserRole;
 import com.metahrms.employee_management.enums.UserStatus;
+import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.repository.EmployeeRepository;
 import com.metahrms.employee_management.repository.UserRepository;
 import com.metahrms.employee_management.specification.UserSpecification;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-
+import jakarta.transaction.Transactional;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import lombok.AccessLevel;
@@ -141,7 +142,7 @@ public class UserService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+        .orElseThrow(() -> new RuntimeException("User Not Found"));
 
         return toUserResponse(user);
     }
@@ -181,6 +182,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+
     private UserResponse toUserResponse(User user) {
         // Find the corresponding employee for the user
         Employee employee = null;
@@ -201,7 +203,11 @@ public class UserService {
                 .fullName(employee != null ? employee.getFullName() : null)
                 .gender(employee != null && employee.getGender() != null ? employee.getGender().name() : null)
                 .dob(employee != null ? employee.getDob() : null)
-                // 'country' is not available in the Employee entity, it will be null.
+                .country(employee != null?employee.getAddress():null)
+                .phoneNumber(employee != null ? employee.getPhoneNumber() : null)
+                .hireDate(employee != null ? employee.getHireDate() : null)
+                // .positionName(employee != null ? employee.getPosition().getPositionName() : null)
+                .deptName(employee != null ? employee.getDeptId() != null ? employee.getDeptId().toString() : null : null)
                 .build();
     }
 }

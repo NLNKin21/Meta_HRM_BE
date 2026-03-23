@@ -70,4 +70,13 @@ public class UserResponse {
     pattern = "dd/MM/yyyy"
   )
   LocalDateTime createdAt;
+
+  String phoneNumber;
+  LocalDate hireDate;
+  @Schema(description = "Position name", example = "Giám đốc Kinh doanh")
+  String positionName;
+
+  @Schema(description = "Department name", example = "HCM Office")
+  String deptName;
+
 }
