@@ -44,10 +44,31 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
 
     List<Employee> findByDeptId(Integer deptId);
     
-    // Lấy danh sách nhân viên sắp xếp theo cấp bậc position (levelOrder)
-    @Query("SELECT e FROM Employee e " +
-           "LEFT JOIN FETCH e.position p " +
-           "WHERE e.deptId = :deptId AND (e.isDeleted = false OR e.isDeleted IS NULL) " +
-           "ORDER BY COALESCE(p.levelOrder, 999) ASC, COALESCE(p.sortOrder, 999) ASC, e.fullName ASC")
+    /**
+     * Lấy nhân viên theo department (chưa xóa), sắp xếp theo position level
+     */
+    @Query("SELECT e FROM Employee e WHERE e.deptId = :deptId AND e.isDeleted = false " +
+           "ORDER BY e.position.levelOrder ASC NULLS LAST")
     List<Employee> findByDeptIdAndIsDeletedFalseOrderByPositionLevel(@Param("deptId") Integer deptId);
+
+    /**
+     * Lấy nhân viên ACTIVE theo department
+     */
+    @Query("SELECT e FROM Employee e WHERE e.deptId = :departmentId " +
+           "AND e.status = :status AND e.isDeleted = false " +
+           "ORDER BY e.position.levelOrder ASC NULLS LAST")
+    List<Employee> findActiveByDepartmentId(
+        @Param("departmentId") Integer departmentId,
+        @Param("status") EmployeeStatus status
+    );
+
+    /**
+     * Đếm nhân viên theo department và status
+     */
+    @Query("SELECT COUNT(e) FROM Employee e WHERE e.deptId = :departmentId " +
+           "AND e.status = :status AND e.isDeleted = false")
+    Long countByDepartmentIdAndStatus(
+        @Param("departmentId") Integer departmentId,
+        @Param("status") EmployeeStatus status
+    );
 }

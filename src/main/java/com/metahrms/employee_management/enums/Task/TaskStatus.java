@@ -1,4 +1,4 @@
-package com.metahrms.employee_management.enums;
+package com.metahrms.employee_management.enums.Task;
 
 public enum TaskStatus {
     PENDING,

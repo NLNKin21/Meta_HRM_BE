@@ -79,10 +79,39 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://34.126.173.70"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Access-Control-Allow-Credentials"));
+        
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173", 
+            "http://34.126.173.70"
+        ));
+        
+        configuration.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
+        ));
+        
+        // ✅ THÊM X-User-Id VÀO DANH SÁCH ALLOWED HEADERS
+        configuration.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "X-User-Id",                           // ← THÊM DÒNG NÀY
+            "Access-Control-Allow-Credentials",
+            "X-Requested-With",
+            "Accept"
+        ));
+        
+        // Hoặc đơn giản hơn - cho phép tất cả headers:
+        // configuration.setAllowedHeaders(List.of("*"));
+        
         configuration.setAllowCredentials(true);
+        
+        // ✅ NÊN THÊM: Expose headers nếu frontend cần đọc response headers
+        configuration.setExposedHeaders(List.of(
+            "Authorization",
+            "X-User-Id"
+        ));
+        
+        // ✅ NÊN THÊM: Cache preflight request
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

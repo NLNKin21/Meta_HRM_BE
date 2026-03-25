@@ -208,6 +208,8 @@ public class UserService {
                 .hireDate(employee != null ? employee.getHireDate() : null)
                 // .positionName(employee != null ? employee.getPosition().getPositionName() : null)
                 .deptName(employee != null ? employee.getDeptId() != null ? employee.getDeptId().toString() : null : null)
+                .roleInDept(employee != null ?employee.getRoleInDept()!=null?employee.getRoleInDept():null:null)
+                .DeptId(employee!=null?employee.getDeptId():null)
                 .build();
     }
 }

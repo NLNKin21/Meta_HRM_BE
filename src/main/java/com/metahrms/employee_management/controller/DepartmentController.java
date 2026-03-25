@@ -2,6 +2,8 @@ package com.metahrms.employee_management.controller;
 
 import com.metahrms.employee_management.dto.response.Department.DepartmentResponse;
 import com.metahrms.employee_management.dto.response.Department.DepartmentSummaryDto;
+import com.metahrms.employee_management.dto.response.Department.TeamMemberResponse;
+import com.metahrms.employee_management.dto.response.Department.TeamWorkloadResponse;
 import com.metahrms.employee_management.service.DepartmentService;
 import com.metahrms.employee_management.dto.request.Department.DepartmentDto;
 import com.metahrms.employee_management.dto.response.ApiResponse;
@@ -119,6 +121,36 @@ public class DepartmentController {
                 .message("Department updated successfully")
                 .data(department)
                 .build();
+    }
+
+    /**
+     * Get all members in a department
+     */
+    @GetMapping("/{departmentId}/members")
+    @Operation(summary = "Get department members", description = "Returns all employees in a specific department")
+    public ResponseEntity<ApiResponse<List<TeamMemberResponse>>> getDepartmentMembers(
+            @Parameter(description = "Department ID", required = true)
+            @PathVariable("departmentId") Integer departmentId) {
+        
+        List<TeamMemberResponse> members = departmentService.getDepartmentMembers(departmentId);
+        return ResponseEntity.ok(
+            ApiResponse.success(members, "Retrieved department members successfully")
+        );
+    }
+
+    /**
+     * Get team workload (tasks count per employee)
+     */
+    @GetMapping("/{departmentId}/workload")
+    @Operation(summary = "Get team workload", description = "Returns workload statistics for each team member")
+    public ResponseEntity<ApiResponse<List<TeamWorkloadResponse>>> getTeamWorkload(
+            @Parameter(description = "Department ID", required = true)
+            @PathVariable("departmentId") Integer departmentId) {
+        
+        List<TeamWorkloadResponse> workload = departmentService.getTeamWorkload(departmentId);
+        return ResponseEntity.ok(
+            ApiResponse.success(workload, "Retrieved team workload successfully")
+        );
     }
 
 

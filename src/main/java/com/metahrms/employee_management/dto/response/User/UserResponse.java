@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 
+import com.metahrms.employee_management.enums.RoleInDepartment;
 import com.metahrms.employee_management.enums.UserRole;
 import com.metahrms.employee_management.enums.UserStatus;
 
@@ -49,6 +50,10 @@ public class UserResponse {
 
   @Schema(description = "User role in the system", example = "USER")
   UserRole role;
+
+  RoleInDepartment roleInDept;
+  
+  Integer DeptId;
 
   @Schema(description = "User account status", example = "ACTIVE")
   UserStatus status;

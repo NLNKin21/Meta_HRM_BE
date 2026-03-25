@@ -43,7 +43,7 @@ public class Employee extends BaseEntity {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(length = 255)
+    @Column(length = 255)   
     private String address;
 
     @Column(name = "hire_date")
