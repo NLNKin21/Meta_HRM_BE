@@ -63,7 +63,7 @@ public class TaskStatusController {
     @Operation(summary = "Get task status by ID", description = "Returns a single task status by ID")
     public ResponseEntity<ApiResponse<TaskStatusResponse>> getStatusById(
             @Parameter(description = "Task Status ID", required = true)
-            @PathVariable Integer id) {
+            @PathVariable("id") Integer id) {
         
         TaskStatusResponse status = taskStatusService.getStatusById(id);
         return ResponseEntity.ok(

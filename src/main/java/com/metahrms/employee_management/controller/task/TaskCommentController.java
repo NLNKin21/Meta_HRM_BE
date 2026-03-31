@@ -107,7 +107,7 @@ public class TaskCommentController {
     @Operation(summary = "Count comments", description = "Returns number of comments for task")
     public ResponseEntity<ApiResponse<Long>> countComments(
             @Parameter(description = "Task ID", required = true)
-            @PathVariable Integer taskId) {
+            @PathVariable("taskId") Integer taskId) {
         
         Long count = commentService.countCommentsByTaskId(taskId);
         return ResponseEntity.ok(
