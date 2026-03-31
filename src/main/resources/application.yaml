@@ -79,6 +79,13 @@ server:
     include-binding-errors: always
 
 # ==========================================
+# FILE UPLOAD CONFIGURATION
+# ==========================================
+app:
+  upload:
+    leave-dir: uploads/leave
+
+# ==========================================
 # JWT CONFIGURATION
 # ==========================================
 jwt:

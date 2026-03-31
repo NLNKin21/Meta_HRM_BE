@@ -15,8 +15,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Schema(description = "Employee information response")
 public class EmployeeResponse {
+
     @Schema(description = "Employee ID", example = "1")
     Integer id;
+
+    @Schema(description = "User ID liên kết với bảng users", example = "26")
+    Integer userId;
 
     @Schema(description = "Full name of the employee", example = "Nguyen Van A")
     String fullName;
@@ -55,10 +59,15 @@ public class EmployeeResponse {
 
     @Schema(description = "Associated username", example = "nguyenvana")
     String username;
-    
-    @Schema(description = "basic Salary", example = "100000")
+
+    @Schema(description = "Basic salary", example = "100000")
     BigDecimal basicSalary;
 
+    @Schema(description = "Manager ID / trưởng phòng dùng để duyệt nghỉ phép", example = "12")
+    Integer managerId;
+
+    @Schema(description = "Manager name / tên trưởng phòng", example = "Nguyen Van B")
+    String managerName;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     @Schema(description = "Creation timestamp", example = "28/11/2025", type = "string", pattern = "dd/MM/yyyy")
@@ -70,6 +79,7 @@ public class EmployeeResponse {
 
     public static class Builder {
         private Integer id;
+        private Integer userId;
         private String fullName;
         private String email;
         private String gender;
@@ -83,10 +93,17 @@ public class EmployeeResponse {
         private String status;
         private String username;
         private BigDecimal basicSalary;
+        private Integer managerId;
+        private String managerName;
         private LocalDateTime createdAt;
 
         public Builder id(Integer id) {
             this.id = id;
+            return this;
+        }
+
+        public Builder userId(Integer userId) {
+            this.userId = userId;
             return this;
         }
 
@@ -155,6 +172,16 @@ public class EmployeeResponse {
             return this;
         }
 
+        public Builder managerId(Integer managerId) {
+            this.managerId = managerId;
+            return this;
+        }
+
+        public Builder managerName(String managerName) {
+            this.managerName = managerName;
+            return this;
+        }
+
         public Builder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -163,6 +190,7 @@ public class EmployeeResponse {
         public EmployeeResponse build() {
             EmployeeResponse response = new EmployeeResponse();
             response.id = this.id;
+            response.userId = this.userId;
             response.fullName = this.fullName;
             response.email = this.email;
             response.gender = this.gender;
@@ -176,6 +204,8 @@ public class EmployeeResponse {
             response.status = this.status;
             response.username = this.username;
             response.basicSalary = this.basicSalary;
+            response.managerId = this.managerId;
+            response.managerName = this.managerName;
             response.createdAt = this.createdAt;
             return response;
         }

@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class EmployeeController {
-    
+
     EmployeeService employeeService;
 
     /**
@@ -49,47 +49,51 @@ public class EmployeeController {
     public ApiResponse<PagedResponse<EmployeeResponse>> getEmployees(
             @Parameter(description = "Page number (zero-based)", example = "0")
             @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
-            
+
             @Parameter(description = "Number of items per page", example = "10")
             @RequestParam(name = "pageSize", required = false, defaultValue = "10") Integer pageSize,
-            
+
             @Parameter(description = "Filter by employee status")
             @RequestParam(name = "status", required = false) EmployeeStatus status,
-            
+
             @Parameter(description = "Filter by department ID")
             @RequestParam(name = "deptId", required = false) Integer deptId,
-            
+
             @Parameter(description = "Filter by hire date (format: dd/MM/yyyy)", example = "01/01/2024")
             @RequestParam(name = "hireDate", required = false)
             @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate hireDate,
-            
+
             @Parameter(description = "Search in employee name (case-insensitive)")
             @RequestParam(name = "search", required = false) String search) {
 
-        log.info("GET /employees - page: {}, size: {}, status: {}, deptId: {}", 
-                 page, pageSize, status, deptId);
+        log.info("GET /employees - page: {}, size: {}, status: {}, deptId: {}",
+                page, pageSize, status, deptId);
 
         EmployeeFilterDto filterDto = EmployeeFilterDto.builder()
-            .page(page)
-            .pageSize(pageSize)
-            .status(status)
-            .deptId(deptId)
-            .hireDate(hireDate)
-            .search(search)
-            .build();
+                .page(page)
+                .pageSize(pageSize)
+                .status(status)
+                .deptId(deptId)
+                .hireDate(hireDate)
+                .search(search)
+                .build();
 
         PagedResponse<EmployeeResponse> employees = employeeService.getEmployees(filterDto);
 
         return ApiResponse.<PagedResponse<EmployeeResponse>>builder()
-            .code(200)
-            .status("success")
-            .message("Get employees successfully")
-            .data(employees)
-            .build();
+                .code(200)
+                .status("success")
+                .message("Get employees successfully")
+                .data(employees)
+                .build();
     }
 
     /**
      * Get employee by ID
+     * EmployeeResponse cần có thêm:
+     * - managerId
+     * - managerName
+     * Service sẽ tự query trưởng phòng theo deptId và map vào response.
      */
     @Operation(
         summary = "Get employee by ID",
@@ -105,15 +109,18 @@ public class EmployeeController {
         EmployeeResponse employee = employeeService.getEmployeeById(id);
 
         return ApiResponse.<EmployeeResponse>builder()
-            .code(200)
-            .status("success")
-            .message("Get employee successfully")
-            .data(employee)
-            .build();
+                .code(200)
+                .status("success")
+                .message("Get employee successfully")
+                .data(employee)
+                .build();
     }
 
     /**
      * Get current user's employee info
+     * EmployeeResponse cần có thêm:
+     * - managerId
+     * - managerName
      */
     @Operation(
         summary = "Get current user's employee info",
@@ -126,11 +133,11 @@ public class EmployeeController {
         EmployeeResponse employee = employeeService.getCurrentUserEmployee();
 
         return ApiResponse.<EmployeeResponse>builder()
-            .code(200)
-            .status("success")
-            .message("Get current user employee info successfully")
-            .data(employee)
-            .build();
+                .code(200)
+                .status("success")
+                .message("Get current user employee info successfully")
+                .data(employee)
+                .build();
     }
 
     /**
@@ -154,11 +161,11 @@ public class EmployeeController {
         EmployeeResponse employee = employeeService.createEmployee(createDto);
 
         return ApiResponse.<EmployeeResponse>builder()
-            .code(201)
-            .status("success")
-            .message("Employee created successfully")
-            .data(employee)
-            .build();
+                .code(201)
+                .status("success")
+                .message("Employee created successfully")
+                .data(employee)
+                .build();
     }
 
     /**
@@ -173,21 +180,21 @@ public class EmployeeController {
     public ApiResponse<EmployeeResponse> createEmployeeWithContract(
             @Parameter(description = "Employee data (JSON)", required = true)
             @RequestPart("employeeData") @Valid EmployeeCreateDto employeeData,
-            
+
             @Parameter(description = "Contract data (JSON)", required = false)
             @RequestPart(value = "contractData", required = false) ContractCreateDto contractData,
-            
+
             @Parameter(description = "Contract file (PDF, DOCX, PNG, JPG)", required = false)
             @RequestPart(value = "contractFile", required = false) MultipartFile contractFile) {
 
-        log.info("POST /employees/with-contract - Creating employee: {} with contract: {}", 
-                 employeeData.getFullName(), contractData != null);
+        log.info("POST /employees/with-contract - Creating employee: {} with contract: {}",
+                employeeData.getFullName(), contractData != null);
 
         try {
             EmployeeResponse employee = employeeService.createEmployeeWithContract(
-                employeeData,
-                contractData,
-                contractFile
+                    employeeData,
+                    contractData,
+                    contractFile
             );
 
             String message = "Tạo nhân viên thành công";
@@ -196,19 +203,19 @@ public class EmployeeController {
             }
 
             return ApiResponse.<EmployeeResponse>builder()
-                .code(201)
-                .status("success")
-                .message(message)
-                .data(employee)
-                .build();
+                    .code(201)
+                    .status("success")
+                    .message(message)
+                    .data(employee)
+                    .build();
 
         } catch (IOException e) {
             log.error("Failed to create employee with contract: {}", e.getMessage());
             return ApiResponse.<EmployeeResponse>builder()
-                .code(400)
-                .status("error")
-                .message("Lỗi upload file hợp đồng: " + e.getMessage())
-                .build();
+                    .code(400)
+                    .status("error")
+                    .message("Lỗi upload file hợp đồng: " + e.getMessage())
+                    .build();
         }
     }
 
@@ -223,7 +230,7 @@ public class EmployeeController {
     public ApiResponse<EmployeeResponse> updateEmployee(
             @Parameter(description = "Employee ID", required = true, example = "1")
             @PathVariable("id") Integer id,
-            
+
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "Employee update data",
                 required = true
@@ -235,11 +242,11 @@ public class EmployeeController {
         EmployeeResponse employee = employeeService.updateEmployee(id, updateDto);
 
         return ApiResponse.<EmployeeResponse>builder()
-            .code(200)
-            .status("success")
-            .message("Employee updated successfully")
-            .data(employee)
-            .build();
+                .code(200)
+                .status("success")
+                .message("Employee updated successfully")
+                .data(employee)
+                .build();
     }
 
     /**
@@ -259,9 +266,9 @@ public class EmployeeController {
         employeeService.deleteEmployee(id);
 
         return ApiResponse.<Void>builder()
-            .code(200)
-            .status("success")
-            .message("Employee deleted successfully")
-            .build();
+                .code(200)
+                .status("success")
+                .message("Employee deleted successfully")
+                .build();
     }
 }

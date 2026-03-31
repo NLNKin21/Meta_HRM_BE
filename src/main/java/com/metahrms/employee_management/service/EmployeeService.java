@@ -19,6 +19,7 @@ import com.metahrms.employee_management.dto.request.Employee.EmployeeCreateDto;
 import com.metahrms.employee_management.dto.request.Employee.EmployeeFilterDto;
 import com.metahrms.employee_management.dto.request.Employee.EmployeeUpdateDto;
 import com.metahrms.employee_management.dto.response.Employee.EmployeeResponse;
+import com.metahrms.employee_management.dto.response.EmployeeProfileResponseDto;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.entity.Contract;
 import com.metahrms.employee_management.entity.Department;
@@ -45,16 +46,13 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class EmployeeService {
-    
+
     EmployeeRepository employeeRepository;
     UserRepository userRepository;
     DepartmentRepository departmentRepository;
-    ContractRepository contractRepository;  // ✅ Thêm
-    CloudinaryService cloudinaryService;    // ✅ Thêm
+    ContractRepository contractRepository;
+    CloudinaryService cloudinaryService;
 
-    /**
-     * Get employees with filtering and pagination
-     */
     public PagedResponse<EmployeeResponse> getEmployees(EmployeeFilterDto filterDto) {
         log.info("Fetching employees with filters: {}", filterDto);
 
@@ -88,9 +86,6 @@ public class EmployeeService {
             .build();
     }
 
-    /**
-     * Get employee by ID
-     */
     public EmployeeResponse getEmployeeById(Integer id) {
         log.info("Fetching employee with id: {}", id);
 
@@ -104,9 +99,6 @@ public class EmployeeService {
         return toEmployeeResponse(employee);
     }
 
-    /**
-     * Get employee by user ID
-     */
     public EmployeeResponse getEmployeeByUserId(Integer userId) {
         log.info("Fetching employee with userId: {}", userId);
 
@@ -120,32 +112,24 @@ public class EmployeeService {
         return toEmployeeResponse(employee);
     }
 
-    /**
-     * Create employee (simple - without contract)
-     */
     @Transactional
     public EmployeeResponse createEmployee(EmployeeCreateDto createDto) {
         log.info("Creating employee for user: {}", createDto.getUserId());
 
-        // Validate user exists
         userRepository.findById(createDto.getUserId())
             .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + createDto.getUserId()));
 
-        // Check if user is already linked to an employee
         if (employeeRepository.findByUserId(createDto.getUserId()).isPresent()) {
             throw new IllegalStateException("User is already linked to an employee profile");
         }
 
-        // Validate department exists
         departmentRepository.findById(createDto.getDeptId())
             .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + createDto.getDeptId()));
 
-        // Determine role
-        RoleInDepartment roleInDept = createDto.getRoleInDept() != null 
-            ? createDto.getRoleInDept() 
+        RoleInDepartment roleInDept = createDto.getRoleInDept() != null
+            ? createDto.getRoleInDept()
             : RoleInDepartment.STAFF;
 
-        // Check if department already has a HEAD
         if (roleInDept == RoleInDepartment.HEAD) {
             Optional<Employee> existingHead = employeeRepository.findFirstByDeptIdAndRoleInDept(
                 createDto.getDeptId(),
@@ -157,7 +141,6 @@ public class EmployeeService {
             }
         }
 
-        // Create employee
         Employee employee = new Employee();
         employee.setUserId(createDto.getUserId());
         employee.setDeptId(createDto.getDeptId());
@@ -178,27 +161,21 @@ public class EmployeeService {
         return toEmployeeResponse(savedEmployee);
     }
 
-    /**
-     * Create employee with contract and file upload
-     */
     @Transactional
     public EmployeeResponse createEmployeeWithContract(
-            EmployeeCreateDto employeeData,
-            ContractCreateDto contractData,
-            MultipartFile contractFile) throws IOException {
+        EmployeeCreateDto employeeData,
+        ContractCreateDto contractData,
+        MultipartFile contractFile
+    ) throws IOException {
 
         log.info("Creating employee with contract for user: {}", employeeData.getUserId());
 
-        // 1. Create employee (reuse existing method)
         EmployeeResponse employeeResponse = createEmployee(employeeData);
 
-        // 2. Create contract if provided
         if (contractData != null) {
-            // Get the created employee
             Employee employee = employeeRepository.findById(employeeResponse.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-            // Upload file to Cloudinary if provided
             String fileUrl = null;
             String fileKey = null;
 
@@ -208,32 +185,28 @@ public class EmployeeService {
                 log.info("Contract file uploaded: {}", fileUrl);
             }
 
-            // Create contract
             Contract contract = Contract.builder()
-                .empId(employee.getId())  // ✅ Link to newly created employee
+                .empId(employee.getId())
                 .contractType(contractData.getContractType())
                 .startDate(contractData.getStartDate())
                 .endDate(contractData.getEndDate())
                 .fileUrl(fileUrl)
                 .fileKey(fileKey)
-                .status(contractData.getStatus() != null 
-                    ? contractData.getStatus() 
+                .status(contractData.getStatus() != null
+                    ? contractData.getStatus()
                     : ContractStatus.ACTIVE)
                 .build();
 
             contract.setIsDeleted(false);
             Contract savedContract = contractRepository.save(contract);
-            
-            log.info("Contract created with ID: {} for employee: {}", 
-                     savedContract.getId(), employee.getId());
+
+            log.info("Contract created with ID: {} for employee: {}",
+                savedContract.getId(), employee.getId());
         }
 
         return employeeResponse;
     }
 
-    /**
-     * Update employee
-     */
     @Transactional
     public EmployeeResponse updateEmployee(Integer id, EmployeeUpdateDto updateDto) {
         log.info("Updating employee with id: {}", id);
@@ -245,14 +218,12 @@ public class EmployeeService {
             throw new IllegalStateException("Cannot update deleted employee");
         }
 
-        // Validate department if provided
         if (updateDto.getDeptId() != null) {
             departmentRepository.findById(updateDto.getDeptId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found with id: " + updateDto.getDeptId()));
             employee.setDeptId(updateDto.getDeptId());
         }
 
-        // Update fields
         if (updateDto.getFullName() != null) {
             employee.setFullName(updateDto.getFullName());
         }
@@ -275,13 +246,12 @@ public class EmployeeService {
             employee.setStatus(updateDto.getStatus());
         }
 
-        // Update role with HEAD validation
         if (updateDto.getRoleInDept() != null) {
             if (updateDto.getRoleInDept() == RoleInDepartment.HEAD &&
                 employee.getRoleInDept() != RoleInDepartment.HEAD) {
 
-                Integer targetDeptId = updateDto.getDeptId() != null 
-                    ? updateDto.getDeptId() 
+                Integer targetDeptId = updateDto.getDeptId() != null
+                    ? updateDto.getDeptId()
                     : employee.getDeptId();
 
                 Optional<Employee> existingHead = employeeRepository.findFirstByDeptIdAndRoleInDept(
@@ -289,9 +259,9 @@ public class EmployeeService {
                     RoleInDepartment.HEAD
                 );
 
-                if (existingHead.isPresent() &&
-                    !Boolean.TRUE.equals(existingHead.get().getIsDeleted()) &&
-                    !existingHead.get().getId().equals(employee.getId())) {
+                if (existingHead.isPresent()
+                    && !Boolean.TRUE.equals(existingHead.get().getIsDeleted())
+                    && !existingHead.get().getId().equals(employee.getId())) {
                     throw new IllegalStateException("Department already has a head employee");
                 }
             }
@@ -304,9 +274,6 @@ public class EmployeeService {
         return toEmployeeResponse(updatedEmployee);
     }
 
-    /**
-     * Delete employee (soft delete)
-     */
     @Transactional
     public void deleteEmployee(Integer id) {
         log.info("Deleting employee with id: {}", id);
@@ -316,13 +283,10 @@ public class EmployeeService {
 
         employee.setIsDeleted(true);
         employeeRepository.save(employee);
-        
+
         log.info("Employee soft deleted successfully: {}", id);
     }
 
-    /**
-     * Get current user's employee info
-     */
     public EmployeeResponse getCurrentUserEmployee() {
         Integer currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
@@ -339,19 +303,66 @@ public class EmployeeService {
         return toEmployeeResponse(employee);
     }
 
-    /**
-     * Convert Employee entity to EmployeeResponse DTO
-     */
-    private EmployeeResponse toEmployeeResponse(Employee employee) {
-        // Get user information
-        String username = null;
-        if (employee.getUserId() != null) {
-            username = userRepository.findById(employee.getUserId())
-                .map(User::getUsername)
-                .orElse(null);
+    @Transactional(readOnly = true)
+    public EmployeeProfileResponseDto getEmployeeProfile(Integer employeeId) {
+        log.info("Fetching employee profile with id: {}", employeeId);
+
+        Employee employee = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên với id: " + employeeId));
+
+        if (Boolean.TRUE.equals(employee.getIsDeleted())) {
+            throw new ResourceNotFoundException("Employee has been deleted");
         }
 
-        // Get department information
+        Employee departmentHead = findDepartmentHead(employee.getDeptId(), employee.getId());
+
+        return EmployeeProfileResponseDto.builder()
+            .id(employee.getId())
+            .userId(employee.getUserId())
+            .deptId(employee.getDeptId())
+            .fullName(employee.getFullName())
+            .gender(employee.getGender())
+            .dob(employee.getDob())
+            .phoneNumber(employee.getPhoneNumber())
+            .address(employee.getAddress())
+            .hireDate(employee.getHireDate())
+            .basicSalary(employee.getBasicSalary())
+            .status(employee.getStatus())
+            .roleInDept(employee.getRoleInDept())
+            .positionId(employee.getPosition() != null ? employee.getPosition().getId() : null)
+            .positionName(employee.getPosition() != null ? employee.getPosition().getPositionName() : null)
+            .managerId(departmentHead != null ? departmentHead.getId() : null)
+            .managerName(departmentHead != null ? departmentHead.getFullName() : null)
+            .build();
+    }
+
+    private Employee findDepartmentHead(Integer deptId, Integer currentEmployeeId) {
+        if (deptId == null) {
+            return null;
+        }
+
+        List<Employee> employees = employeeRepository.findByDeptIdAndStatus(deptId, EmployeeStatus.ACTIVE);
+
+        return employees.stream()
+            .filter(e -> !Boolean.TRUE.equals(e.getIsDeleted()))
+            .filter(e -> e.getRoleInDept() == RoleInDepartment.HEAD)
+            .filter(e -> currentEmployeeId == null || !e.getId().equals(currentEmployeeId))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private EmployeeResponse toEmployeeResponse(Employee employee) {
+        String username = null;
+        String email = null;
+
+        if (employee.getUserId() != null) {
+            Optional<User> userOpt = userRepository.findById(employee.getUserId());
+            if (userOpt.isPresent()) {
+                username = userOpt.get().getUsername();
+                email = userOpt.get().getEmail();
+            }
+        }
+
         String departmentName = null;
         if (employee.getDeptId() != null) {
             departmentName = departmentRepository.findById(employee.getDeptId())
@@ -359,9 +370,13 @@ public class EmployeeService {
                 .orElse(null);
         }
 
+        Employee departmentHead = findDepartmentHead(employee.getDeptId(), employee.getId());
+
         return EmployeeResponse.builder()
             .id(employee.getId())
+            .userId(employee.getUserId())
             .fullName(employee.getFullName())
+            .email(email)
             .gender(employee.getGender() != null ? employee.getGender().name() : null)
             .phoneNumber(employee.getPhoneNumber())
             .department(departmentName)
@@ -372,8 +387,10 @@ public class EmployeeService {
             .roleInDept(employee.getRoleInDept() != null ? employee.getRoleInDept().name() : null)
             .status(employee.getStatus() != null ? employee.getStatus().name() : null)
             .username(username)
-            .basicSalary(employee.getBasicSalary())  // ✅ Thêm nếu chưa có
+            .basicSalary(employee.getBasicSalary())
             .createdAt(employee.getCreatedAt())
+            .managerId(departmentHead != null ? departmentHead.getId() : null)
+            .managerName(departmentHead != null ? departmentHead.getFullName() : null)
             .build();
     }
 }
