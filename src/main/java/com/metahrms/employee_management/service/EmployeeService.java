@@ -53,6 +53,7 @@ public class EmployeeService {
     ContractRepository contractRepository;
     CloudinaryService cloudinaryService;
 
+    @Transactional(readOnly = true)
     public PagedResponse<EmployeeResponse> getEmployees(EmployeeFilterDto filterDto) {
         log.info("Fetching employees with filters: {}", filterDto);
 
@@ -86,6 +87,7 @@ public class EmployeeService {
             .build();
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponse getEmployeeById(Integer id) {
         log.info("Fetching employee with id: {}", id);
 
@@ -99,6 +101,7 @@ public class EmployeeService {
         return toEmployeeResponse(employee);
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponse getEmployeeByUserId(Integer userId) {
         log.info("Fetching employee with userId: {}", userId);
 
@@ -287,6 +290,7 @@ public class EmployeeService {
         log.info("Employee soft deleted successfully: {}", id);
     }
 
+    @Transactional(readOnly = true)
     public EmployeeResponse getCurrentUserEmployee() {
         Integer currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
@@ -336,19 +340,31 @@ public class EmployeeService {
             .build();
     }
 
-    private Employee findDepartmentHead(Integer deptId, Integer currentEmployeeId) {
-        if (deptId == null) {
-            return null;
+    @Transactional(readOnly = true)
+    public List<EmployeeResponse> getDepartmentMembersForManager(Integer managerEmployeeId) {
+        log.info("Fetching department members for managerEmployeeId: {}", managerEmployeeId);
+
+        Employee manager = employeeRepository.findById(managerEmployeeId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Manager not found with id: " + managerEmployeeId
+            ));
+
+        if (Boolean.TRUE.equals(manager.getIsDeleted())) {
+            throw new ResourceNotFoundException("Manager has been deleted");
         }
 
-        List<Employee> employees = employeeRepository.findByDeptIdAndStatus(deptId, EmployeeStatus.ACTIVE);
+        Integer deptId = manager.getDeptId();
+        if (deptId == null) {
+            return List.of();
+        }
 
-        return employees.stream()
-            .filter(e -> !Boolean.TRUE.equals(e.getIsDeleted()))
-            .filter(e -> e.getRoleInDept() == RoleInDepartment.HEAD)
-            .filter(e -> currentEmployeeId == null || !e.getId().equals(currentEmployeeId))
-            .findFirst()
-            .orElse(null);
+        List<Employee> departmentEmployees = employeeRepository.findByDeptId(deptId);
+
+        return departmentEmployees.stream()
+            .filter(emp -> !Boolean.TRUE.equals(emp.getIsDeleted()))
+            .filter(emp -> !emp.getId().equals(managerEmployeeId))
+            .map(this::toEmployeeResponse)
+            .collect(Collectors.toList());
     }
 
     private EmployeeResponse toEmployeeResponse(Employee employee) {
@@ -363,11 +379,9 @@ public class EmployeeService {
             }
         }
 
-        String departmentName = null;
+        Department department = null;
         if (employee.getDeptId() != null) {
-            departmentName = departmentRepository.findById(employee.getDeptId())
-                .map(Department::getDeptName)
-                .orElse(null);
+            department = departmentRepository.findById(employee.getDeptId()).orElse(null);
         }
 
         Employee departmentHead = findDepartmentHead(employee.getDeptId(), employee.getId());
@@ -375,22 +389,38 @@ public class EmployeeService {
         return EmployeeResponse.builder()
             .id(employee.getId())
             .userId(employee.getUserId())
-            .fullName(employee.getFullName())
-            .email(email)
-            .gender(employee.getGender() != null ? employee.getGender().name() : null)
-            .phoneNumber(employee.getPhoneNumber())
-            .department(departmentName)
             .deptId(employee.getDeptId())
-            .address(employee.getAddress())
+            .deptName(department != null ? department.getDeptName() : null)
+            .fullName(employee.getFullName())
+            .gender(employee.getGender())
             .dob(employee.getDob())
+            .phoneNumber(employee.getPhoneNumber())
+            .address(employee.getAddress())
             .hireDate(employee.getHireDate())
-            .roleInDept(employee.getRoleInDept() != null ? employee.getRoleInDept().name() : null)
-            .status(employee.getStatus() != null ? employee.getStatus().name() : null)
-            .username(username)
             .basicSalary(employee.getBasicSalary())
-            .createdAt(employee.getCreatedAt())
+            .status(employee.getStatus())
+            .roleInDept(employee.getRoleInDept())
+            .positionId(employee.getPosition() != null ? employee.getPosition().getId() : null)
+            .positionName(employee.getPosition() != null ? employee.getPosition().getPositionName() : null)
+            .username(username)
+            .email(email)
             .managerId(departmentHead != null ? departmentHead.getId() : null)
             .managerName(departmentHead != null ? departmentHead.getFullName() : null)
             .build();
+    }
+
+    private Employee findDepartmentHead(Integer deptId, Integer currentEmployeeId) {
+        if (deptId == null) {
+            return null;
+        }
+
+        List<Employee> employees = employeeRepository.findByDeptIdAndStatus(deptId, EmployeeStatus.ACTIVE);
+
+        return employees.stream()
+            .filter(e -> !Boolean.TRUE.equals(e.getIsDeleted()))
+            .filter(e -> e.getRoleInDept() == RoleInDepartment.HEAD)
+            .filter(e -> currentEmployeeId == null || !e.getId().equals(currentEmployeeId))
+            .findFirst()
+            .orElse(null);
     }
 }

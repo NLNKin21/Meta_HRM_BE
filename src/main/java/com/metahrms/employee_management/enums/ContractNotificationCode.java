@@ -1,0 +1,14 @@
+package com.metahrms.employee_management.enums;
+
+public enum ContractNotificationCode {
+    CONTRACT_EXPIRING_30,
+    CONTRACT_EXPIRING_15,
+    CONTRACT_EXPIRING_7,
+    CONTRACT_EXPIRING_3,
+    CONTRACT_EXPIRING_1,
+    CONTRACT_EXPIRED,
+    CONTRACT_RENEWED,
+    CONTRACT_CREATED,
+    CONTRACT_UPDATED,
+    CONTRACT_TERMINATED
+}

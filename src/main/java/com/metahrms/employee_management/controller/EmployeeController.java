@@ -2,6 +2,7 @@ package com.metahrms.employee_management.controller;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -38,9 +39,6 @@ public class EmployeeController {
 
     EmployeeService employeeService;
 
-    /**
-     * Get all employees with filtering
-     */
     @Operation(
         summary = "Get all employees",
         description = "Retrieve a paginated list of employees with optional filtering"
@@ -66,8 +64,8 @@ public class EmployeeController {
             @Parameter(description = "Search in employee name (case-insensitive)")
             @RequestParam(name = "search", required = false) String search) {
 
-        log.info("GET /employees - page: {}, size: {}, status: {}, deptId: {}",
-                page, pageSize, status, deptId);
+        log.info("GET /employees - page: {}, pageSize: {}, status: {}, deptId: {}, hireDate: {}, search: {}",
+                page, pageSize, status, deptId, hireDate, search);
 
         EmployeeFilterDto filterDto = EmployeeFilterDto.builder()
                 .page(page)
@@ -88,13 +86,6 @@ public class EmployeeController {
                 .build();
     }
 
-    /**
-     * Get employee by ID
-     * EmployeeResponse cần có thêm:
-     * - managerId
-     * - managerName
-     * Service sẽ tự query trưởng phòng theo deptId và map vào response.
-     */
     @Operation(
         summary = "Get employee by ID",
         description = "Retrieve a single employee by their ID"
@@ -116,12 +107,6 @@ public class EmployeeController {
                 .build();
     }
 
-    /**
-     * Get current user's employee info
-     * EmployeeResponse cần có thêm:
-     * - managerId
-     * - managerName
-     */
     @Operation(
         summary = "Get current user's employee info",
         description = "Retrieve the employee information for the currently authenticated user"
@@ -140,9 +125,28 @@ public class EmployeeController {
                 .build();
     }
 
-    /**
-     * Create employee (simple - without contract)
-     */
+    @Operation(
+        summary = "Get department members for manager",
+        description = "Lấy danh sách nhân viên cùng phòng ban với manager đang đăng nhập"
+    )
+    @GetMapping("/manager/{managerEmployeeId}/department-members")
+    public ApiResponse<List<EmployeeResponse>> getDepartmentMembersForManager(
+            @Parameter(description = "Manager employee ID", required = true, example = "25")
+            @PathVariable("managerEmployeeId") Integer managerEmployeeId) {
+
+        log.info("GET /employees/manager/{}/department-members", managerEmployeeId);
+
+        List<EmployeeResponse> employees =
+                employeeService.getDepartmentMembersForManager(managerEmployeeId);
+
+        return ApiResponse.<List<EmployeeResponse>>builder()
+                .code(200)
+                .status("success")
+                .message("Get department members successfully")
+                .data(employees)
+                .build();
+    }
+
     @Operation(
         summary = "Create employee",
         description = "Create a new employee record (without contract)"
@@ -168,12 +172,9 @@ public class EmployeeController {
                 .build();
     }
 
-    /**
-     * Create employee with contract (multipart/form-data)
-     */
     @Operation(
         summary = "Create employee with contract",
-        description = "Create a new employee with optional contract and file upload (Cloudinary)"
+        description = "Create a new employee with optional contract and file upload"
     )
     @PostMapping(value = "/with-contract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -184,10 +185,10 @@ public class EmployeeController {
             @Parameter(description = "Contract data (JSON)", required = false)
             @RequestPart(value = "contractData", required = false) ContractCreateDto contractData,
 
-            @Parameter(description = "Contract file (PDF, DOCX, PNG, JPG)", required = false)
+            @Parameter(description = "Contract file", required = false)
             @RequestPart(value = "contractFile", required = false) MultipartFile contractFile) {
 
-        log.info("POST /employees/with-contract - Creating employee: {} with contract: {}",
+        log.info("POST /employees/with-contract - Creating employee: {}, hasContract: {}",
                 employeeData.getFullName(), contractData != null);
 
         try {
@@ -210,7 +211,7 @@ public class EmployeeController {
                     .build();
 
         } catch (IOException e) {
-            log.error("Failed to create employee with contract: {}", e.getMessage());
+            log.error("Failed to create employee with contract", e);
             return ApiResponse.<EmployeeResponse>builder()
                     .code(400)
                     .status("error")
@@ -219,9 +220,6 @@ public class EmployeeController {
         }
     }
 
-    /**
-     * Update employee
-     */
     @Operation(
         summary = "Update employee",
         description = "Update an existing employee record. All fields are optional for partial updates."
@@ -249,9 +247,6 @@ public class EmployeeController {
                 .build();
     }
 
-    /**
-     * Delete employee (soft delete)
-     */
     @Operation(
         summary = "Delete employee",
         description = "Soft delete an employee (sets isDeleted = true)"

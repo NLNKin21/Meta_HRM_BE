@@ -1,0 +1,23 @@
+package com.metahrms.employee_management.enums;
+
+public enum HRNotificationType {
+    BIRTHDAY,
+
+    LEAVE_CREATED,
+    LEAVE_SUBMITTED,
+    LEAVE_UPDATED,
+    LEAVE_CANCELLED,
+    LEAVE_APPROVED,
+    LEAVE_REJECTED,
+
+    CONTRACT_EXPIRING,
+    CONTRACT_EXPIRED,
+    CONTRACT_UPDATED,
+
+    ATTENDANCE_MISSING_CHECKIN,
+    ATTENDANCE_LATE,
+
+    TASK_PENDING,
+    PROFILE_UPDATE_PENDING,
+    SYSTEM_ALERT
+}

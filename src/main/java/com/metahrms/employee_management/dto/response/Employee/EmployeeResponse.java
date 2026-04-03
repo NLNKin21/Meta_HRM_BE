@@ -5,6 +5,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.metahrms.employee_management.enums.EmployeeStatus;
+import com.metahrms.employee_management.enums.Gender;
+import com.metahrms.employee_management.enums.RoleInDepartment;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
@@ -22,23 +25,23 @@ public class EmployeeResponse {
     @Schema(description = "User ID liên kết với bảng users", example = "26")
     Integer userId;
 
+    @Schema(description = "Department ID", example = "1")
+    Integer deptId;
+
+    @Schema(description = "Department name", example = "Human Resources")
+    String deptName;
+
     @Schema(description = "Full name of the employee", example = "Nguyen Van A")
     String fullName;
 
     @Schema(description = "Email of the employee", example = "hr@gmail.com")
     String email;
 
-    @Schema(description = "Gender (MALE/FEMALE)", example = "MALE")
-    String gender;
+    @Schema(description = "Gender", example = "MALE")
+    Gender gender;
 
     @Schema(description = "Phone number", example = "0123456789")
     String phoneNumber;
-
-    @Schema(description = "Department name", example = "Human Resources")
-    String department;
-
-    @Schema(description = "Department ID", example = "1")
-    Integer deptId;
 
     @Schema(description = "Residential address", example = "123 Main St, Hanoi")
     String address;
@@ -51,17 +54,23 @@ public class EmployeeResponse {
     @Schema(description = "Hire date", example = "10/06/2020", type = "string", pattern = "dd/MM/yyyy")
     LocalDate hireDate;
 
-    @Schema(description = "Role in department (HEAD/STAFF)", example = "STAFF")
-    String roleInDept;
+    @Schema(description = "Role in department", example = "STAFF")
+    RoleInDepartment roleInDept;
 
-    @Schema(description = "Employment status (ACTIVE/ON_LEAVE/TERMINATED)", example = "ACTIVE")
-    String status;
+    @Schema(description = "Employment status", example = "ACTIVE")
+    EmployeeStatus status;
 
     @Schema(description = "Associated username", example = "nguyenvana")
     String username;
 
     @Schema(description = "Basic salary", example = "100000")
     BigDecimal basicSalary;
+
+    @Schema(description = "Position ID", example = "3")
+    Integer positionId;
+
+    @Schema(description = "Position name", example = "Nhân viên")
+    String positionName;
 
     @Schema(description = "Manager ID / trưởng phòng dùng để duyệt nghỉ phép", example = "12")
     Integer managerId;
@@ -80,19 +89,21 @@ public class EmployeeResponse {
     public static class Builder {
         private Integer id;
         private Integer userId;
+        private Integer deptId;
+        private String deptName;
         private String fullName;
         private String email;
-        private String gender;
+        private Gender gender;
         private String phoneNumber;
-        private String department;
-        private Integer deptId;
         private String address;
         private LocalDate dob;
         private LocalDate hireDate;
-        private String roleInDept;
-        private String status;
+        private RoleInDepartment roleInDept;
+        private EmployeeStatus status;
         private String username;
         private BigDecimal basicSalary;
+        private Integer positionId;
+        private String positionName;
         private Integer managerId;
         private String managerName;
         private LocalDateTime createdAt;
@@ -107,6 +118,16 @@ public class EmployeeResponse {
             return this;
         }
 
+        public Builder deptId(Integer deptId) {
+            this.deptId = deptId;
+            return this;
+        }
+
+        public Builder deptName(String deptName) {
+            this.deptName = deptName;
+            return this;
+        }
+
         public Builder fullName(String fullName) {
             this.fullName = fullName;
             return this;
@@ -117,23 +138,13 @@ public class EmployeeResponse {
             return this;
         }
 
-        public Builder gender(String gender) {
+        public Builder gender(Gender gender) {
             this.gender = gender;
             return this;
         }
 
         public Builder phoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
-            return this;
-        }
-
-        public Builder department(String department) {
-            this.department = department;
-            return this;
-        }
-
-        public Builder deptId(Integer deptId) {
-            this.deptId = deptId;
             return this;
         }
 
@@ -152,12 +163,12 @@ public class EmployeeResponse {
             return this;
         }
 
-        public Builder roleInDept(String roleInDept) {
+        public Builder roleInDept(RoleInDepartment roleInDept) {
             this.roleInDept = roleInDept;
             return this;
         }
 
-        public Builder status(String status) {
+        public Builder status(EmployeeStatus status) {
             this.status = status;
             return this;
         }
@@ -169,6 +180,16 @@ public class EmployeeResponse {
 
         public Builder basicSalary(BigDecimal basicSalary) {
             this.basicSalary = basicSalary;
+            return this;
+        }
+
+        public Builder positionId(Integer positionId) {
+            this.positionId = positionId;
+            return this;
+        }
+
+        public Builder positionName(String positionName) {
+            this.positionName = positionName;
             return this;
         }
 
@@ -191,12 +212,12 @@ public class EmployeeResponse {
             EmployeeResponse response = new EmployeeResponse();
             response.id = this.id;
             response.userId = this.userId;
+            response.deptId = this.deptId;
+            response.deptName = this.deptName;
             response.fullName = this.fullName;
             response.email = this.email;
             response.gender = this.gender;
             response.phoneNumber = this.phoneNumber;
-            response.department = this.department;
-            response.deptId = this.deptId;
             response.address = this.address;
             response.dob = this.dob;
             response.hireDate = this.hireDate;
@@ -204,6 +225,8 @@ public class EmployeeResponse {
             response.status = this.status;
             response.username = this.username;
             response.basicSalary = this.basicSalary;
+            response.positionId = this.positionId;
+            response.positionName = this.positionName;
             response.managerId = this.managerId;
             response.managerName = this.managerName;
             response.createdAt = this.createdAt;

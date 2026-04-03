@@ -32,117 +32,62 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
 
     void deleteById(Integer id);
 
-    // =========================
-    // Leave approval support
-    // =========================
-
+    // giữ method cũ để LeaveRequestServiceImpl không đỏ
     Optional<Employee> findFirstByDeptIdAndRoleInDeptAndStatusAndIsDeletedFalse(
             Integer deptId,
             RoleInDepartment roleInDept,
             EmployeeStatus status
     );
 
-    /**
-     * Tìm trưởng phòng đang ACTIVE và chưa bị xóa theo deptId
-     */
+    // thêm cho contract notification
+    List<Employee> findByDeptIdAndRoleInDeptAndStatusAndIsDeletedFalse(
+            Integer deptId,
+            RoleInDepartment roleInDept,
+            EmployeeStatus status
+    );
+
+    // =========================
+    // Leave approval support
+    // =========================
+
     @Query("""
         SELECT e
         FROM Employee e
         WHERE e.deptId = :deptId
-          AND e.roleInDept = :roleInDept
           AND e.status = :status
           AND e.isDeleted = false
-        ORDER BY e.id ASC
+          AND e.roleInDept = 'HEAD'
     """)
-    List<Employee> findHeadsByDeptIdAndStatus(
+    Optional<Employee> findActiveHeadByDeptId(
             @Param("deptId") Integer deptId,
-            @Param("roleInDept") RoleInDepartment roleInDept,
             @Param("status") EmployeeStatus status
     );
 
-    /**
-     * Lấy 1 trưởng phòng mặc định của phòng ban theo deptId
-     */
-    default Optional<Employee> findActiveDepartmentHead(Integer deptId) {
-        List<Employee> heads = findHeadsByDeptIdAndStatus(
-                deptId,
-                RoleInDepartment.HEAD,
-                EmployeeStatus.ACTIVE
-        );
-        return heads.stream().findFirst();
-    }
+    @Query("""
+        SELECT e
+        FROM Employee e
+        WHERE e.deptId = :deptId
+          AND e.isDeleted = false
+    """)
+    List<Employee> findAllActiveByDeptId(@Param("deptId") Integer deptId);
 
-    /**
-     * Tìm trưởng phòng theo tên phòng ban.
-     *
-     * Lưu ý:
-     * - Query này dùng native SQL vì Employee của bạn đang lưu deptId trực tiếp.
-     * - Giả định bảng departments có cột id và name.
-     * - Nếu bảng departments của bạn không phải cột "name" mà là "dept_name"
-     *   thì đổi d.name thành d.dept_name ở query bên dưới.
-     */
-    @Query(value = """
-        SELECT e.*
-        FROM employees e
-        JOIN departments d ON e.dept_id = d.id
-        WHERE UPPER(d.name) = UPPER(:departmentName)
-          AND e.role_in_dept = :roleInDept
-          AND e.status = :status
-          AND e.is_deleted = false
-        ORDER BY e.id ASC
-        LIMIT 1
-    """, nativeQuery = true)
-    Optional<Employee> findFirstActiveHeadByDepartmentNameNative(
-            @Param("departmentName") String departmentName,
-            @Param("roleInDept") String roleInDept,
-            @Param("status") String status
-    );
-
-    /**
-     * Lấy trưởng phòng HR đang ACTIVE và chưa bị xóa
-     */
-    default Optional<Employee> findActiveHrDepartmentHead() {
-        return findFirstActiveHeadByDepartmentNameNative(
-                "HR",
-                RoleInDepartment.HEAD.name(),
-                EmployeeStatus.ACTIVE.name()
-        );
-    }
-
-    /**
-     * Nếu muốn lấy toàn bộ nhân viên đang làm ở phòng HR
-     */
-    @Query(value = """
-        SELECT e.*
-        FROM employees e
-        JOIN departments d ON e.dept_id = d.id
-        WHERE UPPER(d.name) = UPPER(:departmentName)
-          AND e.status = :status
-          AND e.is_deleted = false
-        ORDER BY e.id ASC
-    """, nativeQuery = true)
-    List<Employee> findActiveEmployeesByDepartmentNameNative(
-            @Param("departmentName") String departmentName,
-            @Param("status") String status
-    );
-
-    /**
-     * Lấy danh sách nhân viên ACTIVE của phòng HR
-     */
-    default List<Employee> findActiveEmployeesInHrDepartment() {
-        return findActiveEmployeesByDepartmentNameNative(
-                "HR",
-                EmployeeStatus.ACTIVE.name()
-        );
-    }
+    @Query("""
+        SELECT e
+        FROM Employee e
+        WHERE e.id IN :employeeIds
+          AND e.isDeleted = false
+    """)
+    List<Employee> findAllByIdInAndNotDeleted(@Param("employeeIds") List<Integer> employeeIds);
 
     // =========================
-    // Dashboard queries
+    // Dashboard / statistics
     // =========================
 
-    Long countByIsDeletedAndStatus(boolean isDeleted, EmployeeStatus status);
-
-    Long countByIsDeletedAndHireDateBetween(boolean isDeleted, LocalDate startDate, LocalDate endDate);
+    Long countByIsDeletedAndCreatedAtBetween(
+            boolean isDeleted,
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime
+    );
 
     Long countByIsDeletedAndStatusAndUpdatedAtBetween(
             boolean isDeleted,
@@ -155,9 +100,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
 
     List<Employee> findByIsDeleted(boolean isDeleted);
 
-    /**
-     * Lấy nhân viên theo department (chưa xóa), sắp xếp theo position level
-     */
     @Query("""
         SELECT e
         FROM Employee e
@@ -167,9 +109,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
     """)
     List<Employee> findByDeptIdAndIsDeletedFalseOrderByPositionLevel(@Param("deptId") Integer deptId);
 
-    /**
-     * Lấy nhân viên ACTIVE theo department
-     */
     @Query("""
         SELECT e
         FROM Employee e
@@ -183,9 +122,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
             @Param("status") EmployeeStatus status
     );
 
-    /**
-     * Đếm nhân viên theo department và status
-     */
     @Query("""
         SELECT COUNT(e)
         FROM Employee e
@@ -198,9 +134,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
             @Param("status") EmployeeStatus status
     );
 
-    /**
-     * Lấy trưởng phòng đang ACTIVE và chưa bị xóa của 1 phòng ban
-     */
     @Query("""
         SELECT e
         FROM Employee e
@@ -215,10 +148,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
             @Param("status") EmployeeStatus status
     );
 
-    /**
-     * Lấy toàn bộ nhân viên đang ACTIVE và chưa bị xóa
-     * Dùng để sync leave balance cho toàn hệ thống, bao gồm cả HEAD / MANAGER / STAFF
-     */
     @Query("""
         SELECT e
         FROM Employee e

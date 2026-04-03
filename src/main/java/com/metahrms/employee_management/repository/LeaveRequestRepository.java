@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
         WHERE lr.managerId = :managerId
           AND lr.status = :status
           AND lr.approvalStage = :stage
+        ORDER BY lr.createdAt DESC
     """)
     List<LeaveRequest> findByManagerIdAndStatusAndApprovalStageWithLeaveType(
             @Param("managerId") Integer managerId,
@@ -50,6 +52,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
         WHERE lr.hrId = :hrId
           AND lr.status = :status
           AND lr.approvalStage = :stage
+        ORDER BY lr.createdAt DESC
     """)
     List<LeaveRequest> findByHrIdAndStatusAndApprovalStageWithLeaveType(
             @Param("hrId") Integer hrId,
@@ -69,6 +72,31 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
             @Param("status") LeaveStatus status,
             @Param("endDate") LocalDate endDate,
             @Param("startDate") LocalDate startDate
+    );
+
+    @Query("""
+        SELECT lr
+        FROM LeaveRequest lr
+        JOIN FETCH lr.leaveType
+        WHERE lr.managerId = :managerId
+          AND lr.status IN :statuses
+          AND (
+                (lr.status = com.metahrms.employee_management.enums.Leave.LeaveStatus.APPROVED
+                    AND lr.approvedAt IS NOT NULL
+                    AND lr.approvedAt >= :startDateTime
+                    AND lr.approvedAt <= :endDateTime)
+             OR (lr.status = com.metahrms.employee_management.enums.Leave.LeaveStatus.REJECTED
+                    AND lr.updatedAt IS NOT NULL
+                    AND lr.updatedAt >= :startDateTime
+                    AND lr.updatedAt <= :endDateTime)
+          )
+        ORDER BY COALESCE(lr.approvedAt, lr.updatedAt, lr.createdAt) DESC
+    """)
+    List<LeaveRequest> findManagerHistoryByStatusesAndProcessedAtRangeWithLeaveType(
+            @Param("managerId") Integer managerId,
+            @Param("statuses") List<LeaveStatus> statuses,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
     );
 
     List<LeaveRequest> findByEmployeeId(Integer employeeId);
@@ -138,4 +166,83 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
             @Param("status") LeaveStatus status,
             @Param("approvalStage") LeaveApprovalStage approvalStage
     );
+
+    @Query("""
+        SELECT COUNT(lr)
+        FROM LeaveRequest lr
+        WHERE lr.managerId = :managerId
+          AND lr.status = :status
+          AND lr.approvedAt IS NOT NULL
+          AND lr.approvedAt >= :startDateTime
+          AND lr.approvedAt <= :endDateTime
+    """)
+    long countByManagerIdAndStatusAndApprovedAtBetween(
+            @Param("managerId") Integer managerId,
+            @Param("status") LeaveStatus status,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    @Query("""
+        SELECT COUNT(lr)
+        FROM LeaveRequest lr
+        WHERE lr.managerId = :managerId
+          AND lr.status = :status
+          AND lr.updatedAt IS NOT NULL
+          AND lr.updatedAt >= :startDateTime
+          AND lr.updatedAt <= :endDateTime
+    """)
+    long countByManagerIdAndStatusAndUpdatedAtBetween(
+            @Param("managerId") Integer managerId,
+            @Param("status") LeaveStatus status,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    @Query("""
+        SELECT COUNT(lr)
+        FROM LeaveRequest lr
+        WHERE lr.managerId = :managerId
+          AND lr.status = :status
+          AND lr.createdAt BETWEEN :start AND :end
+    """)
+    long countByManagerIdAndStatusAndCreatedAtBetween(
+            @Param("managerId") Integer managerId,
+            @Param("status") LeaveStatus status,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
+    );
+
+    @Query("""
+        SELECT COUNT(lr)
+        FROM LeaveRequest lr
+        WHERE lr.managerId = :managerId
+          AND lr.status = :status
+          AND lr.startDate <= :endDate
+          AND lr.endDate >= :startDate
+    """)
+    long countByManagerIdAndStatusAndDateRange(
+            @Param("managerId") Integer managerId,
+            @Param("status") LeaveStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("""
+        SELECT COUNT(DISTINCT lr.employeeId)
+        FROM LeaveRequest lr
+        WHERE lr.status = com.metahrms.employee_management.enums.Leave.LeaveStatus.APPROVED
+          AND lr.startDate <= CURRENT_DATE
+          AND lr.endDate >= CURRENT_DATE
+    """)
+    long countEmployeesOnLeaveToday();
+
+    @Query("""
+        SELECT COUNT(lr)
+        FROM LeaveRequest lr
+        WHERE lr.hrId = :hrId
+          AND lr.status = com.metahrms.employee_management.enums.Leave.LeaveStatus.PENDING
+          AND lr.approvalStage = com.metahrms.employee_management.enums.Leave.LeaveApprovalStage.WAITING_HR
+    """)
+    long countPendingRequestsForHr(@Param("hrId") Integer hrId);
 }

@@ -28,15 +28,13 @@ import com.metahrms.employee_management.repository.LeaveApprovalHistoryRepositor
 import com.metahrms.employee_management.repository.LeaveAttachmentRepository;
 import com.metahrms.employee_management.repository.LeaveRequestRepository;
 import com.metahrms.employee_management.repository.LeaveTypeRepository;
+import com.metahrms.employee_management.service.HRNotificationHelperService;
 import com.metahrms.employee_management.service.Leave.LeaveBalanceService;
 import com.metahrms.employee_management.service.Leave.LeaveRequestService;
-import com.metahrms.employee_management.service.Leave.NotificationService;
 import com.metahrms.employee_management.util.LeaveCalculationUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -56,9 +54,8 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
     private final HolidayRepository holidayRepository;
     private final LeaveApprovalHistoryRepository historyRepository;
     private final LeaveAttachmentRepository attachmentRepository;
-    private final NotificationService notificationService;
     private final EmployeeRepository employeeRepository;
-    
+    private final HRNotificationHelperService hrNotificationHelperService;
 
     @Override
     @Transactional
@@ -176,6 +173,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         request.setStatus(LeaveStatus.PENDING);
         request.setSubmittedAt(LocalDateTime.now());
 
+        // HEAD gửi đơn thì chuyển thẳng HR
         if (employee.getRoleInDept() == RoleInDepartment.HEAD) {
             if (request.getHrId() == null) {
                 throw new BadRequestException("Đơn của HEAD cần có HR để duyệt");
@@ -209,17 +207,28 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
                 .note("Nhân viên gửi đơn nghỉ")
                 .build());
 
+        // Gửi thông báo bước đầu tiên
         if (request.getApprovalStage() == LeaveApprovalStage.WAITING_MANAGER) {
-            notificationService.notifyManager(
+            hrNotificationHelperService.notifyManagerNewLeaveRequest(
                     request.getManagerId(),
-                    "Có đơn nghỉ phép mới cần duyệt: #" + request.getId()
+                    request.getId(),
+                    request.getEmployeeName()
             );
         } else if (request.getApprovalStage() == LeaveApprovalStage.WAITING_HR) {
-            notificationService.notifyHr(
+            hrNotificationHelperService.notifyHrLeaveWaitingForApproval(
                     request.getHrId(),
-                    "Có đơn nghỉ phép mới cần HR duyệt: #" + request.getId()
+                    request.getId(),
+                    request.getEmployeeName()
             );
         }
+
+        // Báo cho nhân viên biết đã gửi thành công
+        hrNotificationHelperService.notifyEmployeeSubmittedLeave(
+                request.getEmployeeId(),
+                request.getId(),
+                request.getStartDate().toString(),
+                request.getEndDate().toString()
+        );
 
         return map(request);
     }
@@ -253,16 +262,18 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
             saveCancelHistory(request, dto.getEmployeeId(), dto.getCancelReason());
 
             if (request.getManagerId() != null) {
-                notificationService.notifyManager(
+                hrNotificationHelperService.notifyManagerLeaveCancelled(
                         request.getManagerId(),
-                        "Đơn nghỉ #" + request.getId() + " đã bị nhân viên hủy"
+                        request.getId(),
+                        request.getEmployeeName()
                 );
             }
 
             if (request.getHrId() != null) {
-                notificationService.notifyHr(
+                hrNotificationHelperService.notifyHrLeaveWaitingForApproval(
                         request.getHrId(),
-                        "Đơn nghỉ #" + request.getId() + " đã bị nhân viên hủy"
+                        request.getId(),
+                        request.getEmployeeName()
                 );
             }
 
@@ -284,16 +295,18 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
             saveCancelHistory(request, dto.getEmployeeId(), dto.getCancelReason());
 
             if (request.getManagerId() != null) {
-                notificationService.notifyManager(
+                hrNotificationHelperService.notifyManagerLeaveCancelled(
                         request.getManagerId(),
-                        "Đơn nghỉ #" + request.getId() + " đã bị nhân viên hủy"
+                        request.getId(),
+                        request.getEmployeeName()
                 );
             }
 
             if (request.getHrId() != null) {
-                notificationService.notifyHr(
+                hrNotificationHelperService.notifyHrLeaveWaitingForApproval(
                         request.getHrId(),
-                        "Đơn nghỉ #" + request.getId() + " đã bị nhân viên hủy"
+                        request.getId(),
+                        request.getEmployeeName()
                 );
             }
 

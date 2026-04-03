@@ -3,18 +3,20 @@ package com.metahrms.employee_management.service.impl.Leave;
 import com.metahrms.employee_management.dto.request.Leave.LeaveApproveDto;
 import com.metahrms.employee_management.dto.request.Leave.LeaveRejectDto;
 import com.metahrms.employee_management.dto.response.Leave.ApprovalStepDto;
+import com.metahrms.employee_management.dto.response.Leave.HrLeaveDashboardSummaryDto;
 import com.metahrms.employee_management.dto.response.Leave.LeaveRequestResponseDto;
+import com.metahrms.employee_management.dto.response.Leave.ManagerLeaveSummaryDto;
 import com.metahrms.employee_management.entity.Department;
 import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.entity.Leave.LeaveApprovalHistory;
 import com.metahrms.employee_management.entity.Leave.LeaveAttachment;
 import com.metahrms.employee_management.entity.Leave.LeaveRequest;
 import com.metahrms.employee_management.entity.Leave.LeaveType;
-import com.metahrms.employee_management.enums.RoleInDepartment;
 import com.metahrms.employee_management.enums.Leave.ApprovalAction;
 import com.metahrms.employee_management.enums.Leave.ApprovalRole;
 import com.metahrms.employee_management.enums.Leave.LeaveApprovalStage;
 import com.metahrms.employee_management.enums.Leave.LeaveStatus;
+import com.metahrms.employee_management.enums.RoleInDepartment;
 import com.metahrms.employee_management.exception.BadRequestException;
 import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.repository.DepartmentRepository;
@@ -23,15 +25,16 @@ import com.metahrms.employee_management.repository.LeaveApprovalHistoryRepositor
 import com.metahrms.employee_management.repository.LeaveAttachmentRepository;
 import com.metahrms.employee_management.repository.LeaveRequestRepository;
 import com.metahrms.employee_management.repository.LeaveTypeRepository;
+import com.metahrms.employee_management.service.HRNotificationHelperService;
 import com.metahrms.employee_management.service.Leave.AttendanceIntegrationService;
 import com.metahrms.employee_management.service.Leave.LeaveApprovalService;
 import com.metahrms.employee_management.service.Leave.LeaveBalanceService;
-import com.metahrms.employee_management.service.Leave.NotificationService;
 import com.metahrms.employee_management.service.Leave.PayrollIntegrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.List;
@@ -48,44 +51,125 @@ public class LeaveApprovalServiceImpl implements LeaveApprovalService {
     private final LeaveBalanceService leaveBalanceService;
     private final AttendanceIntegrationService attendanceIntegrationService;
     private final PayrollIntegrationService payrollIntegrationService;
-    private final NotificationService notificationService;
     private final LeaveTypeRepository leaveTypeRepository;
     private final DepartmentRepository departmentRepository;
     private final EmployeeRepository employeeRepository;
+    private final HRNotificationHelperService hrNotificationHelperService;
 
     private Integer resolveHrHeadId() {
-    Department hrDepartment = departmentRepository
-            .findByDeptNameAndIsDeletedFalse("Phòng Nhân sự")
-            .orElseThrow(() -> new BadRequestException("Không tìm thấy phòng HR"));
+        Department hrDepartment = departmentRepository
+                .findByDeptNameAndIsDeletedFalse("Phòng Nhân sự")
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy phòng HR"));
 
-    Employee hrHead = employeeRepository
-            .findFirstByDeptIdAndRoleInDept(
-                    hrDepartment.getId(),
-                    RoleInDepartment.HEAD
-            )
-            .orElseThrow(() -> new BadRequestException("Không tìm thấy trưởng phòng HR"));
+        Employee hrHead = employeeRepository
+                .findFirstByDeptIdAndRoleInDept(
+                        hrDepartment.getId(),
+                        RoleInDepartment.HEAD
+                )
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy trưởng phòng HR"));
 
-    return hrHead.getId();
-}
+        return hrHead.getId();
+    }
 
     @Override
     @Transactional(readOnly = true)
     public List<LeaveRequestResponseDto> getPendingForManager(Integer managerId) {
-        return leaveRequestRepository.findByManagerIdAndStatusAndApprovalStageWithLeaveType(
+        return leaveRequestRepository
+                .findByManagerIdAndStatusAndApprovalStageWithLeaveType(
+                        managerId,
+                        LeaveStatus.PENDING,
+                        LeaveApprovalStage.WAITING_MANAGER
+                )
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<LeaveRequestResponseDto> getManagerHistory(
+            Integer managerId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
+        return leaveRequestRepository
+                .findManagerHistoryByStatusesAndProcessedAtRangeWithLeaveType(
+                        managerId,
+                        List.of(LeaveStatus.APPROVED, LeaveStatus.REJECTED),
+                        startDateTime,
+                        endDateTime
+                )
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ManagerLeaveSummaryDto getManagerSummary(
+            Integer managerId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        long pending = leaveRequestRepository.countByManagerIdAndStatusAndApprovalStageCustom(
                 managerId,
                 LeaveStatus.PENDING,
                 LeaveApprovalStage.WAITING_MANAGER
-        ).stream().map(this::map).toList();
+        );
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
+        long approved = leaveRequestRepository.countByManagerIdAndStatusAndApprovedAtBetween(
+                managerId,
+                LeaveStatus.APPROVED,
+                startDateTime,
+                endDateTime
+        );
+
+        long rejected = leaveRequestRepository.countByManagerIdAndStatusAndUpdatedAtBetween(
+                managerId,
+                LeaveStatus.REJECTED,
+                startDateTime,
+                endDateTime
+        );
+
+        return ManagerLeaveSummaryDto.builder()
+                .pending(pending)
+                .approved(approved)
+                .rejected(rejected)
+                .build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<LeaveRequestResponseDto> getPendingForHr(Integer hrId) {
-        return leaveRequestRepository.findByHrIdAndStatusAndApprovalStageWithLeaveType(
-                hrId,
-                LeaveStatus.PENDING,
-                LeaveApprovalStage.WAITING_HR
-        ).stream().map(this::map).toList();
+        return leaveRequestRepository
+                .findByHrIdAndStatusAndApprovalStageWithLeaveType(
+                        hrId,
+                        LeaveStatus.PENDING,
+                        LeaveApprovalStage.WAITING_HR
+                )
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public HrLeaveDashboardSummaryDto getHrDashboardSummary(Integer hrId) {
+        long employeesOnLeave = leaveRequestRepository.countEmployeesOnLeaveToday();
+        long pendingRequests = leaveRequestRepository.countPendingRequestsForHr(hrId);
+
+        return HrLeaveDashboardSummaryDto.builder()
+                .employeesOnLeave(employeesOnLeave)
+                .pendingRequests(pendingRequests)
+                .employeesOnLeaveChangePercent(0D)
+                .pendingRequestsChangePercent(0D)
+                .build();
     }
 
     @Override
@@ -109,27 +193,37 @@ public class LeaveApprovalServiceImpl implements LeaveApprovalService {
                     .note(dto.getNote())
                     .build());
 
-           if (request.getTotalDays().compareTo(java.math.BigDecimal.valueOf(3)) <= 0) {
-    finalizeApproval(request);
-} else {
-    Integer hrHeadId = request.getHrId();
+            // <= 3 ngày: duyệt xong luôn
+            if (request.getTotalDays().compareTo(java.math.BigDecimal.valueOf(3)) <= 0) {
+                finalizeApproval(request);
+                return map(request);
+            }
 
-    if (hrHeadId == null) {
-        hrHeadId = resolveHrHeadId();
-        request.setHrId(hrHeadId);
-    }
+            // > 3 ngày: chuyển HR duyệt tiếp
+            Integer hrHeadId = request.getHrId();
+            if (hrHeadId == null) {
+                hrHeadId = resolveHrHeadId();
+                request.setHrId(hrHeadId);
+            }
 
-    request.setStatus(LeaveStatus.PENDING);
-    request.setApprovalStage(LeaveApprovalStage.WAITING_HR);
-    leaveRequestRepository.save(request);
+            request.setStatus(LeaveStatus.PENDING);
+            request.setApprovalStage(LeaveApprovalStage.WAITING_HR);
+            leaveRequestRepository.save(request);
 
-    notificationService.notifyHr(
-            hrHeadId,
-            "Có đơn nghỉ dài ngày cần HR duyệt: #" + request.getId()
-    );
-}
+            // báo cho nhân viên biết manager đã duyệt và chuyển HR
+            hrNotificationHelperService.notifyEmployeeLeaveApprovedByManager(
+                    request.getEmployeeId(),
+                    request.getId()
+            );
 
-return map(request);
+            // báo cho HR có đơn cần xử lý
+            hrNotificationHelperService.notifyHrLeaveWaitingForApproval(
+                    hrHeadId,
+                    request.getId(),
+                    request.getEmployeeName()
+            );
+
+            return map(request);
         }
 
         if (dto.getApproverRole() == ApprovalRole.HR) {
@@ -189,15 +283,17 @@ return map(request);
         }
 
         request.setStatus(LeaveStatus.REJECTED);
+        request.setApprovalStage(LeaveApprovalStage.COMPLETED);
         request.setRejectReason(dto.getRejectReason());
         request.setFinalApproved(false);
-        request.setApprovedAt(LocalDateTime.now());
+        request.setApprovedAt(null);
 
         leaveRequestRepository.save(request);
 
-        notificationService.notifyEmployee(
+        hrNotificationHelperService.notifyEmployeeLeaveRejected(
                 request.getEmployeeId(),
-                "Đơn nghỉ #" + request.getId() + " đã bị từ chối"
+                request.getId(),
+                dto.getRejectReason()
         );
 
         return map(request);
@@ -248,9 +344,9 @@ return map(request);
             payrollIntegrationService.handleFinalApprovedLeave(request);
         }
 
-        notificationService.notifyEmployee(
+        hrNotificationHelperService.notifyEmployeeLeaveApprovedFinal(
                 request.getEmployeeId(),
-                "Đơn nghỉ #" + request.getId() + " đã được duyệt"
+                request.getId()
         );
     }
 
@@ -277,82 +373,82 @@ return map(request);
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn nghỉ"));
     }
 
-   private LeaveRequestResponseDto map(LeaveRequest entity) {
-    List<String> attachmentUrls = attachmentRepository.findByLeaveRequestId(entity.getId())
-            .stream()
-            .map(LeaveAttachment::getFileUrl)
-            .toList();
+    private LeaveRequestResponseDto map(LeaveRequest entity) {
+        List<String> attachmentUrls = attachmentRepository.findByLeaveRequestId(entity.getId())
+                .stream()
+                .map(LeaveAttachment::getFileUrl)
+                .toList();
 
-    List<ApprovalStepDto> steps = historyRepository.findByLeaveRequestIdOrderByActionAtAsc(entity.getId())
-            .stream()
-            .map(h -> ApprovalStepDto.builder()
-                    .actorId(h.getActorId())
-                    .actorRole(h.getActorRole())
-                    .action(h.getAction())
-                    .stage(h.getStage())
-                    .note(h.getNote())
-                    .actionAt(h.getActionAt())
-                    .build())
-            .toList();
+        List<ApprovalStepDto> steps = historyRepository.findByLeaveRequestIdOrderByActionAtAsc(entity.getId())
+                .stream()
+                .map(h -> ApprovalStepDto.builder()
+                        .actorId(h.getActorId())
+                        .actorRole(h.getActorRole())
+                        .action(h.getAction())
+                        .stage(h.getStage())
+                        .note(h.getNote())
+                        .actionAt(h.getActionAt())
+                        .build())
+                        .toList();
 
-    String managerName = null;
-    String departmentName = null;
-    String employeeName = entity.getEmployeeName();
+        String managerName = null;
+        String departmentName = null;
+        String employeeName = entity.getEmployeeName();
 
-    Employee employee = null;
-    if (entity.getEmployeeId() != null) {
-        employee = employeeRepository.findById(entity.getEmployeeId()).orElse(null);
-    }
-
-    if (employee != null) {
-        if (employee.getFullName() != null && !employee.getFullName().isBlank()) {
-            employeeName = employee.getFullName();
+        Employee employee = null;
+        if (entity.getEmployeeId() != null) {
+            employee = employeeRepository.findById(entity.getEmployeeId()).orElse(null);
         }
 
-        if (employee.getDeptId() != null) {
-            Department department = departmentRepository.findById(employee.getDeptId()).orElse(null);
-            if (department != null) {
-                departmentName = department.getDeptName();
+        if (employee != null) {
+            if (employee.getFullName() != null && !employee.getFullName().isBlank()) {
+                employeeName = employee.getFullName();
+            }
+
+            if (employee.getDeptId() != null) {
+                Department department = departmentRepository.findById(employee.getDeptId()).orElse(null);
+                if (department != null) {
+                    departmentName = department.getDeptName();
+                }
             }
         }
-    }
 
-    if (entity.getManagerId() != null) {
-        Employee manager = employeeRepository.findById(entity.getManagerId()).orElse(null);
-        if (manager != null) {
-            managerName = manager.getFullName();
+        if (entity.getManagerId() != null) {
+            Employee manager = employeeRepository.findById(entity.getManagerId()).orElse(null);
+            if (manager != null) {
+                managerName = manager.getFullName();
+            }
         }
-    }
 
-    return LeaveRequestResponseDto.builder()
-            .id(entity.getId())
-            .employeeId(entity.getEmployeeId())
-            .employeeName(employeeName)
-            .managerId(entity.getManagerId())
-            .managerName(managerName)
-            .departmentName(departmentName)
-            .hrId(entity.getHrId())
-            .leaveTypeId(entity.getLeaveType().getId())
-            .leaveTypeCode(entity.getLeaveType().getCode())
-            .leaveTypeName(entity.getLeaveType().getName())
-            .startDate(entity.getStartDate())
-            .endDate(entity.getEndDate())
-            .leaveUnit(entity.getLeaveUnit())
-            .startSession(entity.getStartSession())
-            .endSession(entity.getEndSession())
-            .totalDays(entity.getTotalDays())
-            .reason(entity.getReason())
-            .status(entity.getStatus())
-            .approvalStage(entity.getApprovalStage())
-            .rejectReason(entity.getRejectReason())
-            .cancelReason(entity.getCancelReason())
-            .finalApproved(entity.getFinalApproved())
-            .createdAt(entity.getCreatedAt())
-            .updatedAt(entity.getUpdatedAt())
-            .submittedAt(entity.getSubmittedAt())
-            .approvedAt(entity.getApprovedAt())
-            .attachmentUrls(attachmentUrls)
-            .approvalSteps(steps)
-            .build();
-}
+        return LeaveRequestResponseDto.builder()
+                .id(entity.getId())
+                .employeeId(entity.getEmployeeId())
+                .employeeName(employeeName)
+                .managerId(entity.getManagerId())
+                .managerName(managerName)
+                .departmentName(departmentName)
+                .hrId(entity.getHrId())
+                .leaveTypeId(entity.getLeaveType().getId())
+                .leaveTypeCode(entity.getLeaveType().getCode())
+                .leaveTypeName(entity.getLeaveType().getName())
+                .startDate(entity.getStartDate())
+                .endDate(entity.getEndDate())
+                .leaveUnit(entity.getLeaveUnit())
+                .startSession(entity.getStartSession())
+                .endSession(entity.getEndSession())
+                .totalDays(entity.getTotalDays())
+                .reason(entity.getReason())
+                .status(entity.getStatus())
+                .approvalStage(entity.getApprovalStage())
+                .rejectReason(entity.getRejectReason())
+                .cancelReason(entity.getCancelReason())
+                .finalApproved(entity.getFinalApproved())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .submittedAt(entity.getSubmittedAt())
+                .approvedAt(entity.getApprovedAt())
+                .attachmentUrls(attachmentUrls)
+                .approvalSteps(steps)
+                .build();
+    }
 }
