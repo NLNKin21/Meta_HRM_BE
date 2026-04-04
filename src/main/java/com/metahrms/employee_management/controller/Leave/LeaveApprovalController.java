@@ -24,7 +24,7 @@ public class LeaveApprovalController {
 
     @GetMapping("/manager/{managerId}/pending")
     public ApiResponse<List<LeaveRequestResponseDto>> getPendingForManager(
-            @PathVariable Integer managerId
+            @PathVariable("managerId") Integer managerId
     ) {
         return ApiResponse.success(
                 leaveApprovalService.getPendingForManager(managerId),
@@ -34,9 +34,11 @@ public class LeaveApprovalController {
 
     @GetMapping("/manager/{managerId}/summary")
     public ApiResponse<ManagerLeaveSummaryDto> getManagerSummary(
-            @PathVariable Integer managerId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+            @PathVariable("managerId") Integer managerId,
+            @RequestParam(value = "startDate", required = true) 
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = true) 
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
         return ApiResponse.success(
                 leaveApprovalService.getManagerSummary(managerId, startDate, endDate),
@@ -46,9 +48,11 @@ public class LeaveApprovalController {
 
     @GetMapping("/manager/{managerId}/history")
     public ApiResponse<List<LeaveRequestResponseDto>> getManagerHistory(
-            @PathVariable Integer managerId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+            @PathVariable("managerId") Integer managerId,
+            @RequestParam(value = "startDate", required = true) 
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = true) 
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
         return ApiResponse.success(
                 leaveApprovalService.getManagerHistory(managerId, startDate, endDate),
@@ -58,7 +62,7 @@ public class LeaveApprovalController {
 
     @GetMapping("/hr/{hrId}/pending")
     public ApiResponse<List<LeaveRequestResponseDto>> getPendingForHr(
-            @PathVariable Integer hrId
+            @PathVariable("hrId") Integer hrId
     ) {
         return ApiResponse.success(
                 leaveApprovalService.getPendingForHr(hrId),
@@ -68,7 +72,7 @@ public class LeaveApprovalController {
 
     @GetMapping("/hr/{hrId}/dashboard-summary")
     public ApiResponse<HrLeaveDashboardSummaryDto> getHrDashboardSummary(
-            @PathVariable Integer hrId
+            @PathVariable("hrId") Integer hrId
     ) {
         return ApiResponse.success(
                 leaveApprovalService.getHrDashboardSummary(hrId),
@@ -78,7 +82,7 @@ public class LeaveApprovalController {
 
     @PutMapping("/{leaveRequestId}/approve")
     public ApiResponse<LeaveRequestResponseDto> approve(
-            @PathVariable Long leaveRequestId,
+            @PathVariable("leaveRequestId") Long leaveRequestId,
             @Valid @RequestBody LeaveApproveDto dto
     ) {
         return ApiResponse.success(
@@ -89,7 +93,7 @@ public class LeaveApprovalController {
 
     @PutMapping("/{leaveRequestId}/reject")
     public ApiResponse<LeaveRequestResponseDto> reject(
-            @PathVariable Long leaveRequestId,
+            @PathVariable("leaveRequestId") Long leaveRequestId,
             @Valid @RequestBody LeaveRejectDto dto
     ) {
         return ApiResponse.success(
