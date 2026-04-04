@@ -19,9 +19,9 @@ public class HRNotificationController {
 
     @GetMapping("/recipient/{recipientId}")
     public ApiResponse<PageResponseDto<HRNotificationResponseDto>> getNotificationsByRecipient(
-            @PathVariable Integer recipientId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @PathVariable("recipientId") Integer recipientId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size",defaultValue = "10") int size
     ) {
         Page<HRNotificationResponseDto> result =
                 hrNotificationService.getNotificationsByRecipient(recipientId, PageRequest.of(page, size));
@@ -48,7 +48,7 @@ public class HRNotificationController {
     }
 
     @GetMapping("/recipient/{recipientId}/unread-count")
-    public ApiResponse<Long> countUnreadNotifications(@PathVariable Integer recipientId) {
+    public ApiResponse<Long> countUnreadNotifications(@PathVariable("recipientId") Integer recipientId) {
         return ApiResponse.success(
                 hrNotificationService.countUnreadNotifications(recipientId),
                 "Đếm số thông báo chưa đọc thành công"

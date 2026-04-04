@@ -4,5 +4,6 @@ public enum TaskType {
     TASK,       // Task thông thường
     BUG,        // Lỗi cần fix
     FEATURE,    // Tính năng mới
-    IMPROVEMENT // Cải tiến
+    IMPROVEMENT, // Cải tiến
+    DOCUMENTATION // tài liệu
 }

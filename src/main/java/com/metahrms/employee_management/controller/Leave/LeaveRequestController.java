@@ -26,36 +26,36 @@ public class LeaveRequestController {
 
     @PutMapping("/{id}/draft")
     public ApiResponse<LeaveRequestResponseDto> updateDraft(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody LeaveRequestUpdateDraftDto dto
     ) {
         return ApiResponse.success(leaveRequestService.updateDraft(id, dto), "Cập nhật nháp thành công");
     }
 
     @PutMapping("/{id}/submit")
-    public ApiResponse<LeaveRequestResponseDto> submit(@PathVariable Long id, @Valid @RequestBody LeaveSubmitDto dto) {
+    public ApiResponse<LeaveRequestResponseDto> submit(@PathVariable("id") Long id, @Valid @RequestBody LeaveSubmitDto dto) {
         return ApiResponse.success(leaveRequestService.submit(id, dto), "Gửi đơn nghỉ thành công");
     }
 
     @PutMapping("/{id}/cancel")
-    public ApiResponse<LeaveRequestResponseDto> cancel(@PathVariable Long id, @Valid @RequestBody LeaveCancelDto dto) {
+    public ApiResponse<LeaveRequestResponseDto> cancel(@PathVariable("id") Long id, @Valid @RequestBody LeaveCancelDto dto) {
         return ApiResponse.success(leaveRequestService.cancel(id, dto), "Hủy đơn nghỉ thành công");
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<LeaveRequestResponseDto> getById(@PathVariable Long id) {
+    public ApiResponse<LeaveRequestResponseDto> getById(@PathVariable("id") Long id) {
         return ApiResponse.success(leaveRequestService.getById(id), "Lấy chi tiết đơn nghỉ thành công");
     }
 
     @GetMapping("/employee/{employeeId}")
-    public ApiResponse<List<LeaveRequestResponseDto>> getByEmployee(@PathVariable Integer employeeId) {
+    public ApiResponse<List<LeaveRequestResponseDto>> getByEmployee(@PathVariable("employeeId") Integer employeeId) {
         return ApiResponse.success(leaveRequestService.getByEmployee(employeeId), "Lấy danh sách đơn nghỉ thành công");
     }
 
     @GetMapping("/calendar")
     public ApiResponse<List<LeaveCalendarItemDto>> getCalendar(
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate
+            @RequestParam("startDate") LocalDate startDate,
+            @RequestParam("endDate") LocalDate endDate
     ) {
         return ApiResponse.success(leaveRequestService.getCalendar(startDate, endDate), "Lấy lịch nghỉ thành công");
     }

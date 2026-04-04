@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.metahrms.employee_management.entity.Task.Task;
+import com.metahrms.employee_management.enums.Task.TaskPriority;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -129,15 +130,18 @@ public interface TaskRepository extends JpaRepository<Task, Integer>, JpaSpecifi
            "ORDER BY t.dueDate ASC")
     List<Task> findUrgentTasksByUser(@Param("userId") Integer userId);
 
-    @Query("SELECT t FROM Task t " +
-           "WHERE t.department.id = :deptId " +
-           "AND t.dueDate BETWEEN :today AND :nextWeek " +
-           "AND t.status.isCompleted = false " +
-           "AND t.isDeleted = false " +
-           "ORDER BY t.dueDate ASC LIMIT 10")
-    List<Task> findUpcomingTasksForDepartment(@Param("deptId") Integer deptId,
-                                               @Param("today") LocalDate today,
-                                               @Param("nextWeek") LocalDate nextWeek);
+     @Query(value = "SELECT * FROM tasks t " +
+           "JOIN task_statuses ts ON t.status_id = ts.id " +
+           "WHERE t.department_id = :deptId " +
+           "AND t.due_date BETWEEN :today AND :nextWeek " +
+           "AND ts.is_completed = false " +
+           "AND t.is_deleted = false " +
+           "ORDER BY t.due_date ASC LIMIT 10", 
+           nativeQuery = true)
+    List<Task> findTop10UpcomingTasksForDepartment(@Param("deptId") Integer deptId,
+                                                    @Param("today") LocalDate today,
+                                                    @Param("nextWeek") LocalDate nextWeek);
+
 
     // ========== VALIDATION ==========
     
@@ -173,4 +177,134 @@ public interface TaskRepository extends JpaRepository<Task, Integer>, JpaSpecifi
     @Query("SELECT COUNT(t) FROM Task t WHERE t.assignee.id = :assigneeId " +
            "AND t.isLate = true AND t.isDeleted = false")
     Long countOverdueByAssigneeId(@Param("assigneeId") Integer assigneeId);
+
+
+    // ========== 🆕 QUERY CHO MANAGER - FILTER TASKS ==========
+    
+    /**
+     * Lấy tasks của department với các filter tùy chọn (cho Manager)
+     * - assigneeId: NULL = tất cả nhân viên, có giá trị = chỉ nhân viên đó
+     * - statusId: NULL = tất cả trạng thái
+     * - priority: NULL = tất cả độ ưu tiên
+     * - search: NULL = không search
+     */
+    @Query("SELECT t FROM Task t " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.isDeleted = false " +
+           "AND (:assigneeId IS NULL OR t.assignee.id = :assigneeId) " +
+           "AND (:statusId IS NULL OR t.status.id = :statusId) " +
+           "AND (:priority IS NULL OR t.priority = :priority) " +
+           "AND (:search IS NULL OR :search = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY t.createdAt DESC")
+    Page<Task> findDepartmentTasksWithFilters(
+        @Param("deptId") Integer deptId,
+        @Param("assigneeId") Integer assigneeId,
+        @Param("statusId") Integer statusId,
+        @Param("priority") TaskPriority priority,
+        @Param("search") String search,
+        Pageable pageable
+    );
+
+    /**
+     * Lấy tasks của user với filters (cho Employee view)
+     */
+    @Query("SELECT t FROM Task t " +
+           "WHERE t.assignee.id = :assigneeId " +
+           "AND t.isDeleted = false " +
+           "AND (:statusId IS NULL OR t.status.id = :statusId) " +
+           "AND (:priority IS NULL OR t.priority = :priority) " +
+           "AND (:search IS NULL OR :search = '' OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY t.createdAt DESC")
+    Page<Task> findUserTasksWithFilters(
+        @Param("assigneeId") Integer assigneeId,
+        @Param("statusId") Integer statusId,
+        @Param("priority") TaskPriority priority,
+        @Param("search") String search,
+        Pageable pageable
+    );
+
+    /**
+     * Đếm tasks theo department + filters (cho statistics)
+     */
+    @Query("SELECT COUNT(t) FROM Task t " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.isDeleted = false " +
+           "AND (:assigneeId IS NULL OR t.assignee.id = :assigneeId) " +
+           "AND (:statusId IS NULL OR t.status.id = :statusId) " +
+           "AND (:priority IS NULL OR t.priority = :priority)")
+    Long countDepartmentTasksWithFilters(
+        @Param("deptId") Integer deptId,
+        @Param("assigneeId") Integer assigneeId,
+        @Param("statusId") Integer statusId,
+        @Param("priority") String priority
+    );
+
+    /**
+     * Lấy tasks với full details (cho Kanban/Calendar)
+     */
+    @Query("SELECT t FROM Task t " +
+           "LEFT JOIN FETCH t.status " +
+           "LEFT JOIN FETCH t.assignee " +
+           "LEFT JOIN FETCH t.reporter " +
+           "LEFT JOIN FETCH t.department " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.isDeleted = false " +
+           "AND (:assigneeId IS NULL OR t.assignee.id = :assigneeId) " +
+           "ORDER BY t.createdAt DESC")
+    List<Task> findDepartmentTasksWithDetails(
+        @Param("deptId") Integer deptId,
+        @Param("assigneeId") Integer assigneeId
+    );
+
+    // ========== 🆕 DEPARTMENT STATS QUERIES ==========
+    
+    /**
+     * Đếm tasks đang thực hiện của department
+     */
+    @Query("SELECT COUNT(t) FROM Task t " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.status.isCompleted = false " +
+           "AND t.status.statusName <> 'Backlog' " +
+           "AND t.isDeleted = false")
+    Long countInProgressTasksByDepartment(@Param("deptId") Integer deptId);
+    /**
+     * Đếm tasks đã hoàn thành của department
+     */
+    @Query("SELECT COUNT(t) FROM Task t " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.status.isCompleted = true " +
+           "AND t.isDeleted = false")
+    Long countCompletedTasksByDepartment(@Param("deptId") Integer deptId);
+
+    /**
+     * Lấy danh sách tasks quá hạn của department
+     */
+    @Query("SELECT t FROM Task t " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.isLate = true " +
+           "AND t.status.isCompleted = false " +
+           "AND t.isDeleted = false " +
+           "ORDER BY t.dueDate ASC")
+    List<Task> findOverdueTasksByDepartment(@Param("deptId") Integer deptId);
+
+    /**
+     * Lấy tasks urgent của department
+     */
+    @Query("SELECT t FROM Task t " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.isUrgent = true " +
+           "AND t.status.isCompleted = false " +
+           "AND t.isDeleted = false " +
+           "ORDER BY t.dueDate ASC")
+    List<Task> findUrgentTasksByDepartment(@Param("deptId") Integer deptId);
+
+    /**
+     * Đếm tasks pending (chờ xử lý) của department
+     */
+    @Query("SELECT COUNT(t) FROM Task t " +
+           "WHERE t.department.id = :deptId " +
+           "AND t.status.statusName = 'Chờ xử lý' " +
+           "AND t.isDeleted = false")
+    Long countPendingTasksByDepartment(@Param("deptId") Integer deptId);
+
 }

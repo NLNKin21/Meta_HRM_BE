@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping("/tasks")
 @RequiredArgsConstructor
 @Tag(name = "Task Comments", description = "APIs for managing task comments")
 public class TaskCommentController {
@@ -50,7 +50,7 @@ public class TaskCommentController {
     @Operation(summary = "Add comment to task", description = "Creates a new comment on task")
     public ResponseEntity<ApiResponse<TaskCommentResponse>> addComment(
             @Parameter(description = "Task ID", required = true)
-            @PathVariable Integer taskId,
+            @PathVariable("taskId") Integer taskId,
             @Valid @RequestBody CommentCreateRequest request,
             @Parameter(description = "Current user ID", required = true)
             @RequestHeader("X-User-Id") Integer userId) {
@@ -69,7 +69,7 @@ public class TaskCommentController {
     @Operation(summary = "Update comment", description = "Updates an existing comment")
     public ResponseEntity<ApiResponse<TaskCommentResponse>> updateComment(
             @Parameter(description = "Comment ID", required = true)
-            @PathVariable Integer commentId,
+            @PathVariable("commentId") Integer commentId,
             @Parameter(description = "New comment content", required = true)
             @RequestParam String content,
             @Parameter(description = "Current user ID", required = true)
@@ -89,7 +89,7 @@ public class TaskCommentController {
     @Operation(summary = "Delete comment", description = "Soft deletes a comment")
     public ResponseEntity<ApiResponse<Void>> deleteComment(
             @Parameter(description = "Comment ID", required = true)
-            @PathVariable Integer commentId,
+            @PathVariable("commentId") Integer commentId,
             @Parameter(description = "Current user ID", required = true)
             @RequestHeader("X-User-Id") Integer userId) {
         

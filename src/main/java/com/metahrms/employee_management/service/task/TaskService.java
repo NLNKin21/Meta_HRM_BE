@@ -34,6 +34,7 @@ import com.metahrms.employee_management.util.TaskCodeGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -547,5 +548,173 @@ public class TaskService {
         if (task.getStatus().getIsCompleted() && task.getCompletedAt() != null && task.getDueDate() != null) {
             task.setIsLate(task.getCompletedAt().toLocalDate().isAfter(task.getDueDate()));
         }
+    }
+
+
+/**
+     * Lấy tasks của department với filters (cho Manager)
+     * 
+     * @param departmentId ID phòng ban
+     * @param assigneeId   ID nhân viên (null = tất cả)
+     * @param statusId     ID trạng thái (null = tất cả)
+     * @param priority     Độ ưu tiên: LOW, MEDIUM, HIGH, URGENT (null = tất cả)
+     * @param search       Từ khóa tìm kiếm trong title (null = không search)
+     * @param page         Số trang (0-based)
+     * @param size         Kích thước trang
+     * @return Page<TaskResponse>
+     */
+    @Transactional(readOnly = true)
+    public Page<TaskResponse> getDepartmentTasksWithFilters(
+            Integer departmentId,
+            Integer assigneeId,
+            Integer statusId,
+            String priority,
+            String search,
+            int page,
+            int size
+    ) {
+        log.info("Getting department tasks with filters - deptId: {}, assigneeId: {}, statusId: {}, priority: {}, search: {}", 
+                 departmentId, assigneeId, statusId, priority, search);
+
+        // Validate department exists
+        if (!departmentRepository.existsById(departmentId)) {
+            throw new ResourceNotFoundException("Department", "id", departmentId);
+        }
+
+        // Parse priority (null-safe)
+        TaskPriority taskPriority = parsePriority(priority);
+        
+        // Clean search string
+        String cleanSearch = cleanSearchString(search);
+
+        // Create pageable
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Query với filters
+        Page<Task> tasks = taskRepository.findDepartmentTasksWithFilters(
+            departmentId,
+            assigneeId,
+            statusId,
+            taskPriority,
+            cleanSearch,
+            pageable
+        );
+
+        log.info("Found {} tasks for department {} with filters", tasks.getTotalElements(), departmentId);
+
+        // Map to response với comment count
+        return tasks.map(task -> {
+            TaskResponse response = taskMapper.toTaskResponse(task);
+            response.setCommentCount(commentRepository.countByTaskId(task.getId()).intValue());
+            return response;
+        });
+    }
+
+    /**
+     * Lấy tasks của user với filters (cho Employee)
+     * 
+     * @param assigneeId ID nhân viên
+     * @param statusId   ID trạng thái (null = tất cả)
+     * @param priority   Độ ưu tiên (null = tất cả)
+     * @param search     Từ khóa tìm kiếm (null = không search)
+     * @param page       Số trang
+     * @param size       Kích thước trang
+     * @return Page<TaskResponse>
+     */
+    @Transactional(readOnly = true)
+    public Page<TaskResponse> getUserTasksWithFilters(
+            Integer assigneeId,
+            Integer statusId,
+            String priority,
+            String search,
+            int page,
+            int size
+    ) {
+        log.info("Getting user tasks with filters - assigneeId: {}, statusId: {}, priority: {}, search: {}", 
+                 assigneeId, statusId, priority, search);
+
+        // Validate user exists
+        if (!employeeRepository.existsById(assigneeId)) {
+            throw new ResourceNotFoundException("Employee", "id", assigneeId);
+        }
+
+        // Parse priority
+        TaskPriority taskPriority = parsePriority(priority);
+        
+        // Clean search
+        String cleanSearch = cleanSearchString(search);
+
+        // Create pageable
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Query
+        Page<Task> tasks = taskRepository.findUserTasksWithFilters(
+            assigneeId,
+            statusId,
+            taskPriority,
+            cleanSearch,
+            pageable
+        );
+
+        log.info("Found {} tasks for user {}", tasks.getTotalElements(), assigneeId);
+
+        return tasks.map(task -> {
+            TaskResponse response = taskMapper.toTaskResponse(task);
+            response.setCommentCount(commentRepository.countByTaskId(task.getId()).intValue());
+            return response;
+        });
+    }
+
+    /**
+     * Lấy tasks cho Board view với filter (Kanban)
+     */
+    @Transactional(readOnly = true)
+    public List<TaskSummaryResponse> getTasksForBoardWithFilter(Integer departmentId, Integer assigneeId) {
+        log.info("Getting tasks for board - department: {}, assigneeId: {}", departmentId, assigneeId);
+        
+        List<Task> tasks;
+        
+        if (assigneeId != null) {
+            // Filter by assignee
+            tasks = taskRepository.findByAssigneeIdAndIsDeletedFalse(assigneeId);
+        } else {
+            // All department tasks
+            tasks = taskRepository.findByDepartmentIdAndIsDeletedFalse(departmentId);
+        }
+        
+        return tasks.stream()
+            .map(task -> {
+                TaskSummaryResponse response = taskMapper.toTaskSummaryResponse(task);
+                response.setCommentCount(commentRepository.countByTaskId(task.getId()).intValue());
+                return response;
+            })
+            .collect(Collectors.toList());
+    }
+
+    // ========== PRIVATE HELPER METHODS ==========
+
+    /**
+     * Parse priority string to enum (null-safe)
+     */
+    private TaskPriority parsePriority(String priority) {
+        if (priority == null || priority.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return TaskPriority.valueOf(priority.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid priority value: {}", priority);
+            return null;
+        }
+    }
+
+    /**
+     * Clean search string (null-safe)
+     */
+    private String cleanSearchString(String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return null;
+        }
+        return search.trim();
     }
 }

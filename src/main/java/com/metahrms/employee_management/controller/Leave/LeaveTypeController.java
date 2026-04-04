@@ -24,12 +24,12 @@ public class LeaveTypeController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<LeaveTypeResponseDto> update(@PathVariable Long id, @Valid @RequestBody LeaveTypeUpdateDto dto) {
+    public ApiResponse<LeaveTypeResponseDto> update(@PathVariable("id") Long id, @Valid @RequestBody LeaveTypeUpdateDto dto) {
         return ApiResponse.success(leaveTypeService.update(id, dto), "Cập nhật loại nghỉ thành công");
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<LeaveTypeResponseDto> getById(@PathVariable Long id) {
+    public ApiResponse<LeaveTypeResponseDto> getById(@PathVariable("id") Long id) {
         return ApiResponse.success(leaveTypeService.getById(id), "Lấy chi tiết loại nghỉ thành công");
     }
 

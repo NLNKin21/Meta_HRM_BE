@@ -136,7 +136,7 @@ public class TaskStatsService {
 
         // Upcoming tasks
         List<TaskResponse> upcomingTasks = taskRepository
-            .findUpcomingTasksForDepartment(departmentId, LocalDate.now(), LocalDate.now().plusDays(7))
+            .findTop10UpcomingTasksForDepartment(departmentId, LocalDate.now(), LocalDate.now().plusDays(7))
             .stream()
             .map(taskMapper::toTaskResponse)
             .collect(Collectors.toList());

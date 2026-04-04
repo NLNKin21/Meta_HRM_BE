@@ -27,8 +27,8 @@ public class LeaveBalanceController {
 
     @GetMapping
     public ApiResponse<List<LeaveBalanceResponseDto>> getBalances(
-            @RequestParam Integer employeeId,
-            @RequestParam Integer year
+            @RequestParam("employeeId") Integer employeeId,
+            @RequestParam("year") Integer year
     ) {
         return ApiResponse.success(
                 leaveBalanceService.getEmployeeBalances(employeeId, year),

@@ -35,12 +35,16 @@ import java.util.Map;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = { "/auth/**" };
+    private final String[] PUBLIC_ENDPOINTS = { 
+        "/auth/**",
+        "/api/auth/**"
+    };
     private final String[] SWAGGER_ENDPOINTS = {
         "/swagger-ui/**",
         "/v3/api-docs/**",
         "/swagger-resources/**",
-        "/swagger-ui.html"
+        "/swagger-ui.html",
+        "/actuator/health"
     };
 
     @Value("${jwt.signerKey}")
@@ -52,6 +56,7 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request -> request
                 .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
         );
 
@@ -80,14 +85,24 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173", 
-            "http://34.126.173.70"
-        ));
+        // ⭐ THAY ĐỔI: Cho phép tất cả origins trong development
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        
+        // Hoặc nếu muốn cụ thể:
+        // configuration.setAllowedOrigins(List.of(
+        //     "http://localhost:5173",     // Web
+        //     "http://34.126.173.70",      // Production
+        //     "http://192.168.0.103:8081"  // React Native (Expo)
+        // ));
         
         configuration.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
+
+        // Hoặc đơn giản hơn - cho phép tất cả headers:
+        configuration.setAllowedHeaders(List.of("*"));
+        
+        configuration.setAllowCredentials(true);
         
         // ✅ THÊM X-User-Id VÀO DANH SÁCH ALLOWED HEADERS
         configuration.setAllowedHeaders(List.of(
@@ -99,14 +114,11 @@ public class SecurityConfig {
             "Accept"
         ));
         
-        // Hoặc đơn giản hơn - cho phép tất cả headers:
-        // configuration.setAllowedHeaders(List.of("*"));
-        
-        configuration.setAllowCredentials(true);
         
         // ✅ NÊN THÊM: Expose headers nếu frontend cần đọc response headers
         configuration.setExposedHeaders(List.of(
             "Authorization",
+            "Content-Type",
             "X-User-Id"
         ));
         
@@ -122,14 +134,18 @@ public class SecurityConfig {
     public Filter jwtAuthenticationFilter() {
         return (request, response, chain) -> {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
+            System.out.println("🔍 Processing: " + httpRequest.getMethod() + " " + httpRequest.getRequestURI());
             String requestPath = httpRequest.getRequestURI();
 
-            // First, try to get token from cookie
-            String token = getTokenFromCookie(httpRequest);
+            // Priority 1: Get token from Authorization header (for mobile)
+            String token = getTokenFromAuthorizationHeader(httpRequest);
 
-            // If no token in cookie, try to get from Authorization header
+            // // First, try to get token from cookie
+            // String token = getTokenFromCookie(httpRequest);
+
+            // Priority 2: Get token from cookie (for web)
             if (token == null) {
-                token = getTokenFromAuthorizationHeader(httpRequest);
+                token = getTokenFromCookie(httpRequest);
             }
 
             if (token != null) {
@@ -141,25 +157,53 @@ public class SecurityConfig {
                     String email = jwt.getClaimAsString("email");
                     String role = jwt.getClaimAsString("role");
 
+                    // ⭐ THÊM: Log để debug
+                    System.out.println("✅ Authenticated user: " + username + " (ID: " + id + ")");
+
                     Map<String, Object> userInfo = Map.of(
                             "id", id,
                             "username", username,
                             "email", email,
-                            "role", role);
+                            "role", role
+                    );
 
                     request.setAttribute("user", userInfo);
 
-                    UserDetails userDetails = new User(username, "", Collections.emptyList());
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-                            null, userDetails.getAuthorities());
+                    UserDetails userDetails = User.builder()
+                            .username(username)
+                            .password("")
+                            .authorities(Collections.emptyList())
+                            .build();
+
+                    UsernamePasswordAuthenticationToken authToken = 
+                        new UsernamePasswordAuthenticationToken(
+                            userDetails, 
+                            null, 
+                            userDetails.getAuthorities()
+                        );
+                    
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    
                 } catch (Exception e) {
-                    System.out.println("Invalid JWT: " + e.getMessage());
+                    // ⭐ SỬA: Log chi tiết hơn
+                    System.err.println("❌ Invalid JWT: " + e.getMessage());
+                    e.printStackTrace();
                 }
+            } else {
+                System.out.println("⚠️ No token found in request");
             }
 
             chain.doFilter(request, response);
         };
+    }
+
+
+    private String getTokenFromAuthorizationHeader(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        return null;
     }
 
     private String getTokenFromCookie(HttpServletRequest request) {
@@ -170,14 +214,6 @@ public class SecurityConfig {
                     return cookie.getValue();
                 }
             }
-        }
-        return null;
-    }
-
-    private String getTokenFromAuthorizationHeader(HttpServletRequest request) {
-        String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            return authorizationHeader.substring(7); // Remove "Bearer " prefix
         }
         return null;
     }
