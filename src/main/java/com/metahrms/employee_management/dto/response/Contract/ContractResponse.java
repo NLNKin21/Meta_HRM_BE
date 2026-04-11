@@ -49,6 +49,18 @@ public class ContractResponse {
             example = "hrm-contracts/abc-123")
     String fileKey;  // ✅ Thêm field fileKey
 
+    // ✅ THÊM MỚI: Preview URL cho iframe
+    @Schema(description = "URL optimized for iframe preview")
+    String previewUrl;
+
+    // ✅ THÊM MỚI: File có thể preview không
+    @Schema(description = "Whether the file can be previewed inline")
+    Boolean previewable;
+
+    // ✅ THÊM MỚI: Loại file
+    @Schema(description = "File format (pdf, jpg, docx...)")
+    String fileFormat;
+
     @Schema(description = "Current status of the contract", example = "ACTIVE",
             allowableValues = {"ACTIVE", "PENDING", "EXPIRED", "TERMINATED", "RENEWED"})
     String status;
@@ -68,6 +80,9 @@ public class ContractResponse {
         private Integer empId;
         private String employeeName;
         private String contractType;
+        private String previewUrl;
+        private Boolean previewable;
+        private String fileFormat;
         private LocalDate startDate;
         private LocalDate endDate;
         private String fileUrl;
@@ -115,6 +130,21 @@ public class ContractResponse {
             return this;
         }
 
+        public Builder previewUrl(String previewUrl) {
+            this.previewUrl = previewUrl;
+            return this;
+        }
+
+        public Builder previewable(Boolean previewable) {
+            this.previewable = previewable;
+            return this;
+        }
+
+        public Builder fileFormat(String fileFormat) {
+            this.fileFormat = fileFormat;
+            return this;
+        }
+
         public Builder status(String status) {
             this.status = status;
             return this;
@@ -131,6 +161,9 @@ public class ContractResponse {
             response.empId = this.empId;
             response.employeeName = this.employeeName;
             response.contractType = this.contractType;
+            response.previewUrl = this.previewUrl;
+            response.previewable = this.previewable;
+            response.fileFormat = this.fileFormat;
             response.startDate = this.startDate;
             response.endDate = this.endDate;
             response.fileUrl = this.fileUrl;

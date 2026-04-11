@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/locations/**").authenticated()
                 .anyRequest().authenticated()
         );
 

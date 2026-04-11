@@ -42,6 +42,15 @@ public class Contract extends BaseEntity {
     @Column(name = "file_key", length = 255)  // ✅ Thêm field lưu Cloudinary public_id
     private String fileKey;
 
+    @Column(name = "preview_url")
+    private String previewUrl;
+
+    @Column(name = "file_format")
+    private String fileFormat;
+
+    @Column(name = "previewable")
+    private Boolean previewable;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ContractStatus status;
@@ -58,6 +67,9 @@ public class Contract extends BaseEntity {
         private LocalDate endDate;
         private String fileUrl;
         private String fileKey;  // ✅ Thêm vào builder
+        private String previewUrl;
+        private String fileFormat;
+        private Boolean previewable;
         private ContractStatus status;
 
         public Builder empId(Integer empId) {
@@ -90,6 +102,20 @@ public class Contract extends BaseEntity {
             return this;
         }
 
+        public Builder previewUrl(String previewUrl) {
+            this.previewUrl = previewUrl;
+            return this;
+        }
+        public Builder previewable(Boolean previewable) {
+            this.previewable = previewable;
+            return this;
+        }
+        public Builder fileFormat(String fileFormat) {
+            this.fileFormat = fileFormat;
+            return this;
+        }
+
+
         public Builder status(ContractStatus status) {
             this.status = status;
             return this;
@@ -103,6 +129,9 @@ public class Contract extends BaseEntity {
             contract.endDate = this.endDate;
             contract.fileUrl = this.fileUrl;
             contract.fileKey = this.fileKey;  // ✅ Set fileKey
+            contract.previewUrl = this.previewUrl;
+            contract.fileFormat = this.fileFormat;
+            contract.previewable = this.previewable;
             contract.status = this.status != null ? this.status : ContractStatus.ACTIVE;
             return contract;
         }

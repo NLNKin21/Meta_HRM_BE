@@ -52,6 +52,8 @@ public class UserResponse {
   UserRole role;
 
   RoleInDepartment roleInDept;
+
+  String avatar;
   
   Integer DeptId;
 

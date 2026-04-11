@@ -3,6 +3,7 @@ package com.metahrms.employee_management.entity;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 
+import com.metahrms.employee_management.entity.Attendance.Shift;
 import com.metahrms.employee_management.enums.EmployeeStatus;
 import com.metahrms.employee_management.enums.Gender;
 import com.metahrms.employee_management.enums.RoleInDepartment;
@@ -43,7 +44,10 @@ public class Employee extends BaseEntity {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
-    @Column(length = 255)   
+    @Column(name = "profile_pic_image", length = 500)
+    private String profilePicImage;
+
+    @Column(length = 255)
     private String address;
 
     @Column(name = "hire_date")
@@ -64,6 +68,9 @@ public class Employee extends BaseEntity {
     @JoinColumn(name = "position_id")
     private Position position;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "shift_id")
+    private Shift shift;
 
     public static Builder builder() {
         return new Builder();
@@ -76,12 +83,14 @@ public class Employee extends BaseEntity {
         private Gender gender;
         private LocalDate dob;
         private String phoneNumber;
+        private String profilePicImage;
         private String address;
         private LocalDate hireDate;
         private BigDecimal basicSalary;
         private EmployeeStatus status;
         private RoleInDepartment roleInDept;
         private Position position;
+        private Shift shift;
 
         public Builder userId(Integer userId) {
             this.userId = userId;
@@ -110,6 +119,11 @@ public class Employee extends BaseEntity {
 
         public Builder phoneNumber(String phoneNumber) {
             this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder profilePicImage(String profilePicImage) {
+            this.profilePicImage = profilePicImage;
             return this;
         }
 
@@ -143,6 +157,11 @@ public class Employee extends BaseEntity {
             return this;
         }
 
+        public Builder shift(Shift shift) {
+            this.shift = shift;
+            return this;
+        }
+
         public Employee build() {
             Employee employee = new Employee();
             employee.userId = this.userId;
@@ -151,12 +170,14 @@ public class Employee extends BaseEntity {
             employee.gender = this.gender;
             employee.dob = this.dob;
             employee.phoneNumber = this.phoneNumber;
+            employee.profilePicImage = this.profilePicImage;
             employee.address = this.address;
             employee.hireDate = this.hireDate;
             employee.basicSalary = this.basicSalary;
             employee.status = this.status != null ? this.status : EmployeeStatus.ACTIVE;
             employee.roleInDept = this.roleInDept != null ? this.roleInDept : RoleInDepartment.STAFF;
             employee.position = this.position;
+            employee.shift = this.shift;
             return employee;
         }
     }

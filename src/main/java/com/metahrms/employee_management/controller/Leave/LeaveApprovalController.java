@@ -6,7 +6,11 @@ import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.Leave.HrLeaveDashboardSummaryDto;
 import com.metahrms.employee_management.dto.response.Leave.LeaveRequestResponseDto;
 import com.metahrms.employee_management.dto.response.Leave.ManagerLeaveSummaryDto;
+import com.metahrms.employee_management.entity.Employee;
+import com.metahrms.employee_management.repository.EmployeeRepository;
 import com.metahrms.employee_management.service.Leave.LeaveApprovalService;
+import com.metahrms.employee_management.util.SecurityUtils;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,6 +25,8 @@ import java.util.List;
 public class LeaveApprovalController {
 
     private final LeaveApprovalService leaveApprovalService;
+    private final EmployeeRepository employeeRepository;
+
 
     @GetMapping("/manager/{managerId}/pending")
     public ApiResponse<List<LeaveRequestResponseDto>> getPendingForManager(
@@ -32,33 +38,40 @@ public class LeaveApprovalController {
         );
     }
 
-    @GetMapping("/manager/{managerId}/summary")
+    @GetMapping("/manager/summary")
     public ApiResponse<ManagerLeaveSummaryDto> getManagerSummary(
-            @PathVariable("managerId") Integer managerId,
             @RequestParam(value = "startDate", required = true) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "endDate", required = true) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
     ) {
+
+        Integer userId = SecurityUtils.getCurrentUserId();
+                Employee employee = employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
         return ApiResponse.success(
-                leaveApprovalService.getManagerSummary(managerId, startDate, endDate),
+                leaveApprovalService.getManagerSummary(employee.getId(), startDate, endDate),
                 "Lấy thống kê nghỉ phép cho trưởng phòng thành công"
         );
     }
 
-    @GetMapping("/manager/{managerId}/history")
+    @GetMapping("/manager/history")
     public ApiResponse<List<LeaveRequestResponseDto>> getManagerHistory(
-            @PathVariable("managerId") Integer managerId,
             @RequestParam(value = "startDate", required = true) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "endDate", required = true) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) {
-        return ApiResponse.success(
-                leaveApprovalService.getManagerHistory(managerId, startDate, endDate),
-                "Lấy lịch sử xử lý đơn của trưởng phòng thành công"
-        );
-    }
+        ) {
+                Integer userId = SecurityUtils.getCurrentUserId();
+                Employee employee = employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+                 return ApiResponse.success(
+            leaveApprovalService.getManagerHistory(employee.getId(), startDate, endDate),
+            "Lấy lịch sử xử lý đơn của trưởng phòng thành công"
+    );
+
+        }
 
     @GetMapping("/hr/{hrId}/pending")
     public ApiResponse<List<LeaveRequestResponseDto>> getPendingForHr(

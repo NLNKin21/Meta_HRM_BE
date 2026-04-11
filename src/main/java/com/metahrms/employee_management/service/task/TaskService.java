@@ -278,8 +278,12 @@ public class TaskService {
      * Tạo task mới
      */
     @Transactional
-    public TaskResponse createTask(TaskCreateRequest request, Integer reporterId) {
+    public TaskResponse createTask(TaskCreateRequest request, Integer userId) {
         log.info("Creating new task: {}", request.getTitle());
+
+        // 🔥 Convert user → employee (QUAN TRỌNG)
+        Employee reporter = employeeRepository.findByUserId(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Employee", "userId", userId));
 
         // Validate department
         Department department = departmentRepository.findById(request.getDepartmentId())
@@ -288,10 +292,6 @@ public class TaskService {
         // Validate assignee
         Employee assignee = employeeRepository.findById(request.getAssigneeId())
             .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.getAssigneeId()));
-
-        // Validate reporter
-        Employee reporter = employeeRepository.findById(reporterId)
-            .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", reporterId));
 
         // Validate approver nếu có
         Employee approver = null;
@@ -308,29 +308,30 @@ public class TaskService {
         }
 
         // Validate dates
-        if (request.getStartDate() != null && request.getDueDate() != null) {
-            if (request.getDueDate().isBefore(request.getStartDate())) {
-                throw TaskException.invalidDueDate();
-            }
+        if (request.getStartDate() != null && request.getDueDate() != null &&
+            request.getDueDate().isBefore(request.getStartDate())) {
+            throw TaskException.invalidDueDate();
         }
 
-        // Get default status
+        // Default status
         TaskStatus defaultStatus = statusService.getDefaultStatusByDepartment(request.getDepartmentId());
 
-        // Generate task code
+        // Generate code
         String taskCode = codeGenerator.generateTaskCode();
 
-        // Build entity
+        // Build task
         Task task = Task.builder()
             .taskCode(taskCode)
             .title(request.getTitle())
             .description(request.getDescription())
-            .taskType(request.getTaskType() != null ? 
-                TaskType.valueOf(request.getTaskType()) : TaskType.TASK)
-            .priority(request.getPriority() != null ? 
-                TaskPriority.valueOf(request.getPriority()) : TaskPriority.MEDIUM)
+            .taskType(request.getTaskType() != null 
+                ? TaskType.valueOf(request.getTaskType()) 
+                : TaskType.TASK)
+            .priority(request.getPriority() != null 
+                ? TaskPriority.valueOf(request.getPriority()) 
+                : TaskPriority.MEDIUM)
             .status(defaultStatus)
-            .reporter(reporter)
+            .reporter(reporter) // ✅ đúng employee
             .assignee(assignee)
             .approver(approver)
             .department(department)
@@ -338,19 +339,19 @@ public class TaskService {
             .estimatedHours(request.getEstimatedHours())
             .startDate(request.getStartDate())
             .dueDate(request.getDueDate())
-            .isUrgent(request.getIsUrgent() != null ? request.getIsUrgent() : false)
+            .isUrgent(Boolean.TRUE.equals(request.getIsUrgent()))
             .completionRate(0)
             .isLate(false)
             .isDeleted(false)
             .build();
 
         Task saved = taskRepository.save(task);
-        log.info("Created task with ID: {} and code: {}", saved.getId(), saved.getTaskCode());
 
-        // Save history
-        historyService.logTaskCreated(saved, reporterId);
+        log.info("Created task ID: {}, code: {}", saved.getId(), saved.getTaskCode());
 
-        // Send notification to assignee
+        // ✅ FIX: truyền employeeId, không phải userId
+        historyService.logTaskCreated(saved, reporter.getId());
+
         notificationService.sendTaskAssignedNotification(saved);
 
         return taskMapper.toTaskResponse(saved);
@@ -623,31 +624,32 @@ public class TaskService {
      */
     @Transactional(readOnly = true)
     public Page<TaskResponse> getUserTasksWithFilters(
-            Integer assigneeId,
+            Integer userId,
             Integer statusId,
             String priority,
             String search,
             int page,
             int size
     ) {
-        log.info("Getting user tasks with filters - assigneeId: {}, statusId: {}, priority: {}, search: {}", 
-                 assigneeId, statusId, priority, search);
+        // 🔥 Convert user → employee
+        Employee employee = employeeRepository.findByUserId(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Employee", "userId", userId));
 
-        // Validate user exists
-        if (!employeeRepository.existsById(assigneeId)) {
-            throw new ResourceNotFoundException("Employee", "id", assigneeId);
-        }
+        Integer assigneeId = employee.getId();
+
+        log.info("Getting user tasks with filters - employeeId: {}, statusId: {}, priority: {}, search: {}", 
+                assigneeId, statusId, priority, search);
 
         // Parse priority
         TaskPriority taskPriority = parsePriority(priority);
-        
+
         // Clean search
         String cleanSearch = cleanSearchString(search);
 
-        // Create pageable
+        // Pageable
         Pageable pageable = PageRequest.of(page, size);
 
-        // Query
+        // ✅ Query đúng employeeId
         Page<Task> tasks = taskRepository.findUserTasksWithFilters(
             assigneeId,
             statusId,
@@ -656,7 +658,7 @@ public class TaskService {
             pageable
         );
 
-        log.info("Found {} tasks for user {}", tasks.getTotalElements(), assigneeId);
+        log.info("Found {} tasks for employee {}", tasks.getTotalElements(), assigneeId);
 
         return tasks.map(task -> {
             TaskResponse response = taskMapper.toTaskResponse(task);

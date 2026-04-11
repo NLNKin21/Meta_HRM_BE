@@ -197,6 +197,7 @@ public class UserService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole())
+                .avatar(employee != null ? employee.getProfilePicImage() : null)
                 .status(user.getStatus())
                 .createdAt(user.getCreatedAt())
                 // Map additional fields from the Employee entity if it exists

@@ -8,6 +8,7 @@ import com.metahrms.employee_management.dto.response.task.task.TaskDetailRespons
 import com.metahrms.employee_management.dto.response.task.task.TaskResponse;
 import com.metahrms.employee_management.dto.response.task.task.TaskSummaryResponse;
 import com.metahrms.employee_management.service.task.TaskService;
+import com.metahrms.employee_management.util.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -118,9 +119,6 @@ public class TaskController {
         description = "Returns paginated tasks assigned to current user with optional filters"
     )
     public ResponseEntity<ApiResponse<Page<TaskResponse>>> getMyTasksWithFilters(
-            @Parameter(description = "Current user ID", required = true)
-            @RequestHeader("X-User-Id") Integer currentUserId,
-            
             @Parameter(description = "Filter by status ID")
             @RequestParam(name = "statusId", required = false) Integer statusId,
             
@@ -136,11 +134,12 @@ public class TaskController {
             @Parameter(description = "Page size")
             @RequestParam(name = "size", defaultValue = "20") int size
     ) {
+        Integer userId = SecurityUtils.getCurrentUserId();
         log.info("GET /tasks/my-tasks - userId: {}, statusId: {}, priority: {}, search: {}", 
-                 currentUserId, statusId, priority, search);
+                 userId, statusId, priority, search);
         
         Page<TaskResponse> tasks = taskService.getUserTasksWithFilters(
-            currentUserId,
+            userId,
             statusId,
             priority,
             search,
@@ -356,15 +355,15 @@ public class TaskController {
      * Tạo task mới
      */
     @PostMapping
-    @Operation(summary = "Create new task", description = "Creates a new task")
     public ResponseEntity<ApiResponse<TaskResponse>> createTask(
-            @Valid @RequestBody TaskCreateRequest request,
-            @Parameter(description = "Reporter (current user) ID", required = true)
-            @RequestHeader("X-User-Id") Integer reporterId
+            @Valid @RequestBody TaskCreateRequest request
     ) {
+        Integer userId = SecurityUtils.getCurrentUserId();
+
         log.info("POST /tasks - Creating task: {}", request.getTitle());
-        
-        TaskResponse created = taskService.createTask(request, reporterId);
+
+        TaskResponse created = taskService.createTask(request, userId);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(
             ApiResponse.success(created, "Task created successfully")
         );

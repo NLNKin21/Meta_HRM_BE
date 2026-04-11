@@ -101,8 +101,50 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY:727988751731697}
   api-secret: ${CLOUDINARY_API_SECRET:90vVKuoLKhSDd_73ptX62A139Cc}
   folder: MetaHRM                           # Thư mục lưu file trên Cloudinary
-  max-file-size: 10485760                          # 10MB
-  
+  max-file-size: 10485760          
+# File upload limits
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB                # 10MB
+
+
+# ============================================
+# FACE RECOGNITION SERVICE CONFIGURATION
+# ============================================
+face-recognition:
+  service:
+    base-url: http://localhost:8000
+    enabled: true
+    
+  endpoints:
+    enroll: /api/face/enroll
+    verify: /api/face/verify
+    health: /health
+    
+  timeouts:
+    connection: 5000      # 5 seconds
+    read: 30000          # 30 seconds (AI processing takes time)
+    
+  retry:
+    max-attempts: 3
+    delay: 1000          # 1 second between retries
+    
+  thresholds:
+    verification: 80.0   # Confidence threshold
+    min-quality: 0.7     # Minimum image quality
+    
+  image:
+    max-size: 10485760   # 10MB
+    compress-quality: 0.9
+    target-width: 800    # Resize trước khi gửi để tối ưu
+    
+  # Circuit breaker configuration
+  circuit-breaker:
+    enabled: true
+    failure-rate-threshold: 50      # Open circuit if 50% fail
+    wait-duration-in-open-state: 10000  # 10 seconds
+    sliding-window-size: 10
 
 
 # ==========================================

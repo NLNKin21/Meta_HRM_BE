@@ -47,6 +47,20 @@ dependencies {
 	implementation ("org.flywaydb:flyway-mysql")
 		// Cloudinary
 	implementation("com.cloudinary:cloudinary-http44:1.36.0")
+
+
+    // Apache HttpClient
+    implementation("org.apache.httpcomponents.client5:httpclient5")
+	// WebClient (reactive) - thay RestTemplate
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+	// Image processing
+    implementation("org.imgscalr:imgscalr-lib:4.2")
+    // Apache Commons IO
+    implementation("commons-io:commons-io:2.11.0")
+    // Resilience4j (Circuit Breaker)
+    implementation("io.github.resilience4j:resilience4j-spring-boot2:2.1.0")
+    // AOP
+    implementation("org.springframework.boot:spring-boot-starter-aop")
 }
 
 tasks.withType<JavaCompile> {

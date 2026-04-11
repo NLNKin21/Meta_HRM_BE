@@ -130,6 +130,34 @@ public class ApiResponse<T> {
     }
 
     /**
+     * Error 401 - Unauthorized
+     */
+    public static <T> ApiResponse<T> unauthorized(String message) {
+        return error(401, message);
+    }
+
+     /**
+     * Error 403 - Forbidden
+     */
+    public static <T> ApiResponse<T> forbidden(String message) {
+        return error(403, message);
+    }
+
+     /**
+     * Error 503 - Service Unavailable
+     */
+    public static <T> ApiResponse<T> serviceUnavailable(String message) {
+        return error(503, message);
+    }
+
+    /**
+     * Error 500 - Internal Server Error
+     */
+    public static <T> ApiResponse<T> internalError(String message) {
+        return error(500, message);
+    }
+
+    /**
      * Error response 500 Server Error
      */
     public static <T> ApiResponse<T> serverError(String message) {

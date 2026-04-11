@@ -99,39 +99,53 @@ public class ContractService {
      * Create contract with file upload
      */
     @Transactional
-    public ContractResponse createContract(ContractCreateDto createDto, MultipartFile file) throws IOException {
+    public ContractResponse createContract(ContractCreateDto createDto, MultipartFile file) 
+            throws IOException {
         log.info("Creating contract for employee: {}", createDto.getEmpId());
 
-        // ✅ Validate employee exists
         Employee employee = employeeRepository.findById(createDto.getEmpId())
-            .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + createDto.getEmpId()));
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Employee not found with id: " + createDto.getEmpId()));
 
-        // ✅ Upload file to Cloudinary (if provided)
+        // ✅ Upload file với method mới - trả về đầy đủ thông tin
         String fileUrl = null;
         String fileKey = null;
+        String previewUrl = null;
+        String fileFormat = null;
+        boolean previewable = false;
 
         if (file != null && !file.isEmpty()) {
-            fileUrl = cloudinaryService.uploadFile(file);
-            fileKey = cloudinaryService.extractPublicId(fileUrl);
-            log.info("File uploaded successfully: {}", fileUrl);
+            CloudinaryService.UploadResult uploadResult = 
+                cloudinaryService.uploadContractFile(file);
+            
+            fileUrl = uploadResult.getFileUrl();
+            fileKey = uploadResult.getPublicId();
+            previewUrl = uploadResult.getPreviewUrl();
+            fileFormat = uploadResult.getFormat();
+            previewable = uploadResult.isPreviewable();
+            
+            log.info("File uploaded: url={}, previewUrl={}, previewable={}", 
+                fileUrl, previewUrl, previewable);
         }
 
-        // ✅ Create contract entity
         Contract contract = Contract.builder()
             .empId(createDto.getEmpId())
             .contractType(createDto.getContractType())
             .startDate(createDto.getStartDate())
             .endDate(createDto.getEndDate())
             .fileUrl(fileUrl)
-            .fileKey(fileKey)  // ✅ Lưu public_id để xóa sau
-            .status(createDto.getStatus() != null ? createDto.getStatus() : ContractStatus.ACTIVE)
+            .fileKey(fileKey)
+            .previewUrl(previewUrl)      // ✅ Lưu preview URL
+            .fileFormat(fileFormat)       // ✅ Lưu format
+            .previewable(previewable)    // ✅ Lưu flag
+            .status(createDto.getStatus() != null 
+                ? createDto.getStatus() : ContractStatus.ACTIVE)
             .build();
 
         contract.setIsDeleted(false);
-
         Contract savedContract = contractRepository.save(contract);
-        log.info("Contract created successfully with id: {}", savedContract.getId());
-
+        
+        log.info("Contract created with id: {}", savedContract.getId());
         return toContractResponse(savedContract);
     }
 

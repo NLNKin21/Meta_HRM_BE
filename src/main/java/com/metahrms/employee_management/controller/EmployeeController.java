@@ -2,22 +2,30 @@ package com.metahrms.employee_management.controller;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.cloudinary.Cloudinary;
 import com.metahrms.employee_management.dto.request.Contract.ContractCreateDto;
 import com.metahrms.employee_management.dto.request.Employee.EmployeeCreateDto;
 import com.metahrms.employee_management.dto.request.Employee.EmployeeFilterDto;
 import com.metahrms.employee_management.dto.request.Employee.EmployeeUpdateDto;
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.Employee.EmployeeResponse;
+import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.enums.EmployeeStatus;
+import com.metahrms.employee_management.exception.ResourceNotFoundException;
+import com.metahrms.employee_management.repository.EmployeeRepository;
+import com.metahrms.employee_management.service.CloudinaryService;
 import com.metahrms.employee_management.service.EmployeeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +46,9 @@ import lombok.extern.slf4j.Slf4j;
 public class EmployeeController {
 
     EmployeeService employeeService;
+    CloudinaryService cloudinaryService;
+    EmployeeRepository employeeRepository;
+    
 
     @Operation(
         summary = "Get all employees",
@@ -245,6 +256,51 @@ public class EmployeeController {
                 .message("Employee updated successfully")
                 .data(employee)
                 .build();
+    }
+
+    /**
+     * Upload avatar cho employee
+     * POST /api/employees/{id}/avatar
+     */
+    @PostMapping(value = "/{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadAvatar(
+            @PathVariable("id") Integer id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        log.info("[AVATAR] Uploading for employee_id={}", id);
+
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(404,"File is empty"));
+            }
+
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body(ApiResponse.error(404,"Only image files allowed"));
+            }
+
+            // Upload to Cloudinary
+            String imageUrl = cloudinaryService.uploadAvatar(file, id.longValue());
+
+            // Update employee
+            Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found: " + id));
+
+            employee.setProfilePicImage(imageUrl);
+            employeeRepository.save(employee);
+
+            log.info("[AVATAR] Success: employee_id={}, url={}", id, imageUrl);
+
+            Map<String, String> data = new HashMap<>();
+            data.put("avatarUrl", imageUrl);
+
+            return ResponseEntity.ok(ApiResponse.success(data, "Avatar uploaded successfully"));
+
+        } catch (IOException e) {
+            log.error("[AVATAR] Failed", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(404,"Upload failed: " + e.getMessage()));
+        }
     }
 
     @Operation(
