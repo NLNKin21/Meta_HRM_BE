@@ -16,4 +16,10 @@ public interface DepartmentRepository extends JpaRepository<Department, Integer>
     Optional<Department> findByDeptName(String deptName);
 
     Optional<Department> findByDeptNameAndIsDeletedFalse(String deptName);
+
+    /**
+     * Tìm theo ID và chưa bị xoá
+     */
+    Optional<Department> findByIdAndIsDeletedFalse(Integer id);
+
 }

@@ -30,6 +30,8 @@ public class UserResponse {
   @Schema(description = "Unique identifier of the user", example = "1")
   Integer id;
 
+  Integer employeeId;
+
   @Schema(description = "Username", example = "johndoe")
   String username;
 

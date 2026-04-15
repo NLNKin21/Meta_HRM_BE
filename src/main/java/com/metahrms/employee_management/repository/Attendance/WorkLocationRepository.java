@@ -1,6 +1,8 @@
 package com.metahrms.employee_management.repository.Attendance;
 
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -177,5 +179,40 @@ public interface WorkLocationRepository extends JpaRepository<WorkLocation, Inte
         @Param("maxLat") BigDecimal maxLat,
         @Param("minLon") BigDecimal minLon,
         @Param("maxLon") BigDecimal maxLon
+    );
+
+    /**
+     * Tìm theo ID và chưa bị xoá - dùng trong Admin update/delete
+     */
+    Optional<WorkLocation> findByIdAndIsDeletedFalse(Integer id);
+
+    /**
+     * Tìm theo code và chưa bị xoá - dùng khi validate unique code lúc create
+     */
+    Optional<WorkLocation> findByCodeAndIsDeletedFalse(String code);
+
+    /**
+     * Kiểm tra code đã tồn tại (chưa xoá) - dùng khi create
+     */
+    boolean existsByCodeAndIsDeletedFalse(String code);
+
+    /**
+     * Kiểm tra code đã tồn tại (chưa xoá, trừ chính nó) - dùng khi update
+     */
+    boolean existsByCodeAndIdNotAndIsDeletedFalse(String code, Integer id);
+
+    /**
+     * Danh sách có phân trang + filter - dùng trong Admin list
+     */
+    @Query("SELECT wl FROM WorkLocation wl WHERE wl.isDeleted = false " +
+           "AND (:isActive IS NULL OR wl.isActive = :isActive) " +
+           "AND (:keyword IS NULL OR :keyword = '' OR " +
+           "     LOWER(wl.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "     LOWER(wl.code) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "     LOWER(wl.address) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<WorkLocation> findAllWithFilters(
+        @Param("isActive") Boolean isActive,
+        @Param("keyword") String keyword,
+        Pageable pageable
     );
 }

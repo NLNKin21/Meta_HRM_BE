@@ -245,4 +245,21 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
           AND lr.approvalStage = com.metahrms.employee_management.enums.Leave.LeaveApprovalStage.WAITING_HR
     """)
     long countPendingRequestsForHr(@Param("hrId") Integer hrId);
+
+
+    /**
+         * Lấy leave requests đã approved của NV trong khoảng thời gian
+         * Dùng trong tính lương để tính ngày nghỉ có/không lương
+         */
+        @Query("SELECT lr FROM LeaveRequest lr " +
+        "WHERE lr.employeeId = :empId " +
+        "AND lr.status = 'APPROVED' " +
+        "AND lr.finalApproved = true " +
+        "AND lr.startDate <= :endDate " +
+        "AND lr.endDate >= :startDate")
+        List<LeaveRequest> findApprovedByEmployeeAndPeriod(
+        @Param("empId") Integer empId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+        );
 }

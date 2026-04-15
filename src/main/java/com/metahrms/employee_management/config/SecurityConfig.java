@@ -169,11 +169,13 @@ public class SecurityConfig {
                     );
 
                     request.setAttribute("user", userInfo);
+                    
+                    String springRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
 
                     UserDetails userDetails = User.builder()
                             .username(username)
                             .password("")
-                            .authorities(Collections.emptyList())
+                            .authorities(springRole)
                             .build();
 
                     UsernamePasswordAuthenticationToken authToken = 
@@ -182,9 +184,9 @@ public class SecurityConfig {
                             null, 
                             userDetails.getAuthorities()
                         );
-                    
+
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    
+
                 } catch (Exception e) {
                     // ⭐ SỬA: Log chi tiết hơn
                     System.err.println("❌ Invalid JWT: " + e.getMessage());

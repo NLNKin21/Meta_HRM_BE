@@ -195,6 +195,7 @@ public class UserService {
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
+                .employeeId(employee != null ?employee.getId():null)
                 .email(user.getEmail())
                 .role(user.getRole())
                 .avatar(employee != null ? employee.getProfilePicImage() : null)

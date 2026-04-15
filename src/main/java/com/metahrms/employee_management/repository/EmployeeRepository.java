@@ -148,6 +148,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
             @Param("status") EmployeeStatus status
     );
 
+    @Query("SELECT e FROM Employee e " +
+       "LEFT JOIN FETCH e.position " +
+       "LEFT JOIN FETCH e.shift " +
+       "WHERE e.deptId = :deptId AND e.isDeleted = false")
+        List<Employee> findByDeptIdWithDetails(@Param("deptId") Integer deptId);
+
     @Query("""
         SELECT e
         FROM Employee e
@@ -155,4 +161,52 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
           AND e.isDeleted = false
     """)
     List<Employee> findAllByStatusAndNotDeleted(@Param("status") EmployeeStatus status);
+
+    /**
+     * Tìm Employee theo userId từ JWT
+     * SecurityUtils.getCurrentUserId() → userId → Employee
+     *
+     * Dùng trong:
+     * - WorkLocationServiceImpl (getCurrentUserId → createdBy)
+     * - ShiftServiceImpl (getCurrentUserId → createdBy)
+     * - Bước 2: /me/* endpoints
+     */
+    Optional<Employee> findByUserIdAndIsDeletedFalse(Integer userId);
+
+    /**
+     * Tìm theo ID và chưa bị xoá
+     * Dùng trong ShiftServiceImpl.assignShiftToEmployee()
+     */
+    Optional<Employee> findByIdAndIsDeletedFalse(Integer id);
+
+    /**
+     * Lấy employees theo danh sách IDs (chưa xoá)
+     * Dùng trong ShiftServiceImpl.assignShiftToEmployees() - bulk assign
+     */
+    List<Employee> findByIdInAndIsDeletedFalse(List<Integer> ids);
+
+    /**
+     * Lấy employees đang dùng shift với thông tin position
+     * Dùng trong ShiftServiceImpl.getEmployeesByShift()
+     *
+     * JOIN FETCH position để tránh N+1 query
+     */
+    @Query("SELECT e FROM Employee e " +
+           "LEFT JOIN FETCH e.position " +
+           "WHERE e.shift.id = :shiftId " +
+           "AND e.isDeleted = false " +
+           "ORDER BY e.fullName ASC")
+    List<Employee> findByShiftIdWithDetails(@Param("shiftId") Integer shiftId);
+
+    /**
+     * Lấy employees theo department (chưa xoá)
+     * Dùng trong Bước 3: quản lý theo phòng ban
+     */
+    List<Employee> findByDeptIdAndIsDeletedFalse(Integer deptId);
+
+    /**
+     * Đếm employees theo department
+     * Dùng trong Bước 3: summary report
+     */
+    long countByDeptIdAndIsDeletedFalse(Integer deptId);
 }

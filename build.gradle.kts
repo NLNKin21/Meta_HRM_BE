@@ -48,6 +48,9 @@ dependencies {
 		// Cloudinary
 	implementation("com.cloudinary:cloudinary-http44:1.36.0")
 
+	// export excel
+	implementation("org.apache.poi:poi:5.2.5")
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
 
     // Apache HttpClient
     implementation("org.apache.httpcomponents.client5:httpclient5")

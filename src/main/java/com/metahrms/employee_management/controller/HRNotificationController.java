@@ -34,9 +34,9 @@ public class HRNotificationController {
 
     @GetMapping("/recipient/{recipientId}/unread")
     public ApiResponse<PageResponseDto<HRNotificationResponseDto>> getUnreadNotificationsByRecipient(
-            @PathVariable Integer recipientId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @PathVariable("recipientId") Integer recipientId,
+            @RequestParam(name="page", defaultValue = "0") int page,
+            @RequestParam(name="size", defaultValue = "10") int size
     ) {
         Page<HRNotificationResponseDto> result =
                 hrNotificationService.getUnreadNotificationsByRecipient(recipientId, PageRequest.of(page, size));
@@ -57,8 +57,8 @@ public class HRNotificationController {
 
     @PutMapping("/{notificationId}/read")
     public ApiResponse<HRNotificationResponseDto> markAsRead(
-            @PathVariable Long notificationId,
-            @RequestParam Integer recipientId
+            @PathVariable("notificationId") Long notificationId,
+            @RequestParam("recipientId") Integer recipientId
     ) {
         return ApiResponse.success(
                 hrNotificationService.markAsRead(notificationId, recipientId),
@@ -74,8 +74,8 @@ public class HRNotificationController {
 
     @DeleteMapping("/{notificationId}")
     public ApiResponse<String> deleteNotification(
-            @PathVariable Long notificationId,
-            @RequestParam Integer recipientId
+            @PathVariable("notificationId") Long notificationId,
+            @RequestParam("recipientId") Integer recipientId
     ) {
         hrNotificationService.deleteNotification(notificationId, recipientId);
         return ApiResponse.success("OK", "Xóa thông báo thành công");

@@ -57,6 +57,22 @@ public interface AttendanceAnomalyRepository extends JpaRepository<AttendanceAno
      */
     List<AttendanceAnomaly> findBySeverity(AnomalySeverity severity);
     
+
+    /**
+     * Đếm anomalies chưa resolve
+     */
+    @Query("SELECT COUNT(a) FROM AttendanceAnomaly a WHERE a.resolved = false")
+    long countUnresolved();
+
+    /**
+     * Đếm critical anomalies chưa resolve
+     */
+    @Query("SELECT COUNT(a) FROM AttendanceAnomaly a " +
+           "WHERE a.resolved = false " +
+           "AND a.severity = 'CRITICAL'")
+    long countUnresolvedCritical();
+
+    
     /**
      * Tìm anomalies theo type và severity
      */
