@@ -3,12 +3,13 @@ package com.metahrms.employee_management.entity;
 import java.time.LocalDate;
 
 import com.metahrms.employee_management.enums.ContractStatus;
-import com.metahrms.employee_management.enums.ContractType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,8 +27,8 @@ public class Contract extends BaseEntity {
     @Column(name = "emp_id", nullable = false)
     private Integer empId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "contract_type", nullable = false, length = 50)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contract_type_id", nullable = false)
     private ContractType contractType;
 
     @Column(name = "start_date")

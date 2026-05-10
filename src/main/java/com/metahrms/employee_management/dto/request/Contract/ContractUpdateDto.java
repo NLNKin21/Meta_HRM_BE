@@ -3,8 +3,8 @@ package com.metahrms.employee_management.dto.request.Contract;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.metahrms.employee_management.entity.ContractType;
 import com.metahrms.employee_management.enums.ContractStatus;
-import com.metahrms.employee_management.enums.ContractType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
@@ -20,8 +20,8 @@ import lombok.experimental.FieldDefaults;
 @Schema(description = "Data Transfer Object for updating an existing employment contract")
 public class ContractUpdateDto {
 
-    @Schema(description = "Type of the contract", example = "FULL_TIME")
-    ContractType contractType;
+    @Schema(description = "ID of the new contract type", example = "1")
+    Integer contractTypeId;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     @Schema(description = "Contract start date", example = "01/01/2024", type = "string", pattern = "dd/MM/yyyy")
@@ -75,7 +75,7 @@ public class ContractUpdateDto {
 
         public ContractUpdateDto build() {
             ContractUpdateDto dto = new ContractUpdateDto();
-            dto.contractType = this.contractType;
+            dto.contractTypeId = this.contractType.getId();
             dto.startDate = this.startDate;
             dto.endDate = this.endDate;
             dto.fileUrl = this.fileUrl;

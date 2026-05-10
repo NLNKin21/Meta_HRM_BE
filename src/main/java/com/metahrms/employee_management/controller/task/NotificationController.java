@@ -35,9 +35,9 @@ public class NotificationController {
             @Parameter(description = "Current user ID", required = true)
             @RequestHeader("X-User-Id") Integer userId,
             @Parameter(description = "Page number", example = "0")
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(name = "page", defaultValue = "0") int page,
             @Parameter(description = "Page size", example = "20")
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(name = "size", defaultValue = "20") int size) {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<NotificationResponse> notifications = notificationService.getNotificationsByUser(userId, pageable);
@@ -86,7 +86,7 @@ public class NotificationController {
     @Operation(summary = "Mark notification as read", description = "Marks a single notification as read")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
             @Parameter(description = "Notification ID", required = true)
-            @PathVariable Integer id) {
+            @PathVariable("id") Integer id) {
         
         notificationService.markAsRead(id);
         return ResponseEntity.ok(

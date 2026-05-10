@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.metahrms.employee_management.dto.request.User.ChangePasswordDto;
+import com.metahrms.employee_management.dto.request.User.ForgotPasswordDto;
 import com.metahrms.employee_management.dto.request.User.LoginDto;
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.AuthResponse;
@@ -21,6 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -115,39 +118,36 @@ public class AuthController {
         return ResponseEntity.ok(userResponse);
     }
 
+    @Operation(
+    summary = "Change password",
+    description = "Change password for the currently authenticated user"
+    )
+    @PostMapping("/change-password")
+    public ApiResponse<Void> changePassword(
+            @RequestBody ChangePasswordDto request,
+            HttpServletRequest httpRequest) {
 
-    // @Operation(
-    //     summary = "Forgot password",
-    //     description = "Reset user password by providing email and new password"
-    // )
-    // @io.swagger.v3.oas.annotations.responses.ApiResponse(
-    //     responseCode = "200",
-    //     description = "Password changed successfully",
-    //     content = @Content(schema = @Schema(implementation = ApiResponse.class))
-    // )
-    // @PostMapping("/forgot_password")
-    // public ApiResponse<Void> forgotPassword(
-    //         @io.swagger.v3.oas.annotations.parameters.RequestBody(
-    //             description = "Forgot password request (email and new password)",
-    //             required = true,
-    //             content = @Content(schema = @Schema(implementation = ForgotPasswordDto.class))
-    //         )
-    //         @RequestBody ForgotPasswordDto input) {
-    //     try {
-    //         authService.forgotPassword(input);
+        authService.changePassword(httpRequest, request);
 
-    //         ApiResponse<Void> successResponse = new ApiResponse<>();
-    //         successResponse.setStatus("success");
-    //         successResponse.setMessage("Change Password Successfully");
+        return ApiResponse.<Void>builder()
+                .status("success")
+                .message("Đổi mật khẩu thành công")
+                .build();
+    }
 
-    //         return successResponse;
-    //     } catch (RuntimeException e) {
-    //         ApiResponse<Void> errorResponse = new ApiResponse<>();
-    //         errorResponse.setStatus("failed");
-    //         errorResponse.setMessage(e.getMessage());
+    @Operation(
+        summary = "Forgot password",
+        description = "Generate new password and send to user email"
+    )
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(
+            @RequestBody @Valid ForgotPasswordDto request) {
 
-    //         return errorResponse;
-    //     }
-    // }
+        authService.forgotPassword(request.getEmail());
 
+        return ApiResponse.<Void>builder()
+                .status("success")
+                .message("Mật khẩu mới đã được gửi đến email của bạn")
+                .build();
+    }
 }

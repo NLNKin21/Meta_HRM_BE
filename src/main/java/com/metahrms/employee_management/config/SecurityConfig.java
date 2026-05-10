@@ -36,8 +36,12 @@ import java.util.Map;
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = { 
-        "/auth/**",
-        "/api/auth/**"
+        "/auth/login",
+        "/auth/logout",
+        "/auth/forgot-password",
+        "/api/auth/login",
+        "/api/auth/logout",
+        "/api/auth/forgot-password"
     };
     private final String[] SWAGGER_ENDPOINTS = {
         "/swagger-ui/**",

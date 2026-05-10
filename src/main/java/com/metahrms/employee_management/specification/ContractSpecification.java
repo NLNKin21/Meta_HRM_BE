@@ -8,7 +8,6 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.metahrms.employee_management.entity.Contract;
 import com.metahrms.employee_management.enums.ContractStatus;
-import com.metahrms.employee_management.enums.ContractType;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -16,7 +15,7 @@ public class ContractSpecification {
 
     public static Specification<Contract> filterContracts(
             ContractStatus status,
-            ContractType contractType,
+            Integer contractTypeId,
             Integer empId,
             LocalDate startDate,
             LocalDate endDate) {
@@ -33,8 +32,8 @@ public class ContractSpecification {
             }
 
             // Filter by contract type
-            if (contractType != null) {
-                predicates.add(criteriaBuilder.equal(root.get("contractType"), contractType));
+            if (contractTypeId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("contractType"), contractTypeId));
             }
 
             // Filter by employee ID

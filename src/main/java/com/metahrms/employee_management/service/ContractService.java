@@ -19,10 +19,12 @@ import com.metahrms.employee_management.dto.request.Contract.ContractUpdateDto;
 import com.metahrms.employee_management.dto.response.Contract.ContractResponse;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.entity.Contract;
+import com.metahrms.employee_management.entity.ContractType;
 import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.enums.ContractStatus;
 import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.repository.ContractRepository;
+import com.metahrms.employee_management.repository.ContractTypeRepository;
 import com.metahrms.employee_management.repository.EmployeeRepository;
 import com.metahrms.employee_management.specification.ContractSpecification;
 
@@ -39,17 +41,19 @@ public class ContractService {
     ContractRepository contractRepository;
     EmployeeRepository employeeRepository;
     CloudinaryService cloudinaryService;
+    ContractTypeRepository contractTypeRepository;
 
     /**
      * Get contracts with filtering and pagination
      */
+    @Transactional(readOnly = true)
     public PagedResponse<ContractResponse> getContracts(ContractFilterDto filterDto) {
         log.info("Fetching contracts with filters: {}", filterDto);
 
         // Build specification for filtering
         Specification<Contract> spec = ContractSpecification.filterContracts(
             filterDto.getStatus(),
-            filterDto.getContractType(),
+            filterDto.getContractTypeId(),
             filterDto.getEmpId(),
             filterDto.getStartDate(),
             filterDto.getEndDate()
@@ -82,6 +86,7 @@ public class ContractService {
     /**
      * Get contract by ID
      */
+    @Transactional(readOnly = true)
     public ContractResponse getContractById(Integer id) {
         log.info("Fetching contract with id: {}", id);
 
@@ -103,6 +108,11 @@ public class ContractService {
             throws IOException {
         log.info("Creating contract for employee: {}", createDto.getEmpId());
 
+        ContractType contractType = contractTypeRepository
+    .findById(createDto.getContractTypeId())
+    .orElseThrow(() -> new ResourceNotFoundException(
+        "Contract type not found: " + createDto.getContractTypeId()));
+
         Employee employee = employeeRepository.findById(createDto.getEmpId())
             .orElseThrow(() -> new ResourceNotFoundException(
                 "Employee not found with id: " + createDto.getEmpId()));
@@ -113,6 +123,7 @@ public class ContractService {
         String previewUrl = null;
         String fileFormat = null;
         boolean previewable = false;
+        
 
         if (file != null && !file.isEmpty()) {
             CloudinaryService.UploadResult uploadResult = 
@@ -126,11 +137,13 @@ public class ContractService {
             
             log.info("File uploaded: url={}, previewUrl={}, previewable={}", 
                 fileUrl, previewUrl, previewable);
+
+                
         }
 
         Contract contract = Contract.builder()
             .empId(createDto.getEmpId())
-            .contractType(createDto.getContractType())
+            .contractType(contractType)
             .startDate(createDto.getStartDate())
             .endDate(createDto.getEndDate())
             .fileUrl(fileUrl)
@@ -164,8 +177,12 @@ public class ContractService {
         }
 
         // ✅ Update basic fields
-        if (updateDto.getContractType() != null) {
-            contract.setContractType(updateDto.getContractType());
+        if (updateDto.getContractTypeId() != null) {
+            ContractType newType = contractTypeRepository
+                .findById(updateDto.getContractTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Contract type not found: " + updateDto.getContractTypeId()));
+            contract.setContractType(newType);
         }
         if (updateDto.getStartDate() != null) {
             contract.setStartDate(updateDto.getStartDate());
@@ -248,7 +265,8 @@ public class ContractService {
             .id(contract.getId())
             .empId(contract.getEmpId())
             .employeeName(employeeName)
-            .contractType(contract.getContractType() != null ? contract.getContractType().name() : null)
+            .contractType(contract.getContractType() != null? contract.getContractType().getTypeName(): null)
+            .contractTypeId(contract.getContractType() != null? contract.getContractType().getId(): null)
             .startDate(contract.getStartDate())
             .endDate(contract.getEndDate())
             .fileUrl(contract.getFileUrl())  // ✅ Trả về URL trực tiếp từ Cloudinary

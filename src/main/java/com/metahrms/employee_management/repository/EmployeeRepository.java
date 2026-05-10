@@ -32,6 +32,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
 
     void deleteById(Integer id);
 
+    @Query("""
+        select e
+        from Employee e
+        left join fetch e.position
+        where e.id = :id
+        """)
+    Optional<Employee> findByIdWithPosition(@Param("id") Integer id);
+
     // giữ method cũ để LeaveRequestServiceImpl không đỏ
     Optional<Employee> findFirstByDeptIdAndRoleInDeptAndStatusAndIsDeletedFalse(
             Integer deptId,

@@ -30,6 +30,7 @@ import com.metahrms.employee_management.enums.EmployeeStatus;
 import com.metahrms.employee_management.enums.RoleInDepartment;
 import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.repository.ContractRepository;
+import com.metahrms.employee_management.repository.ContractTypeRepository;
 import com.metahrms.employee_management.repository.DepartmentRepository;
 import com.metahrms.employee_management.repository.EmployeeRepository;
 import com.metahrms.employee_management.repository.UserRepository;
@@ -52,6 +53,7 @@ public class EmployeeService {
     DepartmentRepository departmentRepository;
     ContractRepository contractRepository;
     CloudinaryService cloudinaryService;
+    ContractTypeRepository contractTypeRepository;
 
     @Transactional(readOnly = true)
     public PagedResponse<EmployeeResponse> getEmployees(EmployeeFilterDto filterDto) {
@@ -188,9 +190,22 @@ public class EmployeeService {
                 log.info("Contract file uploaded: {}", fileUrl);
             }
 
+            com.metahrms.employee_management.entity.ContractType contractType = contractTypeRepository.findById(contractData.getContractTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Contract type not found with id: " + contractData.getContractTypeId()
+                ));
+
+            if (Boolean.TRUE.equals(contractType.getIsDeleted())) {
+                throw new ResourceNotFoundException("Contract type has been deleted");
+            }
+
+            if (!Boolean.TRUE.equals(contractType.getIsActive())) {
+                throw new IllegalStateException("Contract type is inactive");
+            }
+
             Contract contract = Contract.builder()
                 .empId(employee.getId())
-                .contractType(contractData.getContractType())
+                .contractType(contractType)
                 .startDate(contractData.getStartDate())
                 .endDate(contractData.getEndDate())
                 .fileUrl(fileUrl)

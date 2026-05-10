@@ -24,6 +24,10 @@ public class Holiday {
     @Column(nullable = false, length = 200)
     private String name;
 
+    @Column(nullable = false, length = 50)
+    @Builder.Default
+    private String type = "NATIONAL";  // NATIONAL hoặc COMPANY
+
     @Column(nullable = false)
     private Boolean active;
 }

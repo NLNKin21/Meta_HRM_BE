@@ -1,62 +1,97 @@
 package com.metahrms.employee_management.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.io.UnsupportedEncodingException;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
 
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EmailService {
-    @Autowired
-    private final JavaMailSender emailSender;
-    private final SpringTemplateEngine templateEngine;
 
-    public void sendPayrollEmail(String to, Map<String, Object> data) {
+    private final JavaMailSender mailSender;
+
+    @Value("${app.mail.from}")
+    private String fromEmail;
+
+    @Value("${app.mail.from-name}")
+    private String fromName;
+
+    /**
+     * Gửi email chào mừng kèm thông tin đăng nhập
+     * Nếu gửi thất bại → chỉ log, không throw exception
+     */
+    public void sendWelcomeEmail(String toEmail, String username, String rawPassword) {
         try {
-            Context context = new Context();
-            context.setVariables(data);
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(toEmail);
+            message.setSubject("[Meta HRM] Tài khoản của bạn đã được tạo");
+            message.setText(buildWelcomeEmailContent(username, toEmail, rawPassword));
 
-            String htmlContent = templateEngine.process("payroll-template", context);
+            mailSender.send(message);
+            log.info("Welcome email sent to: {}", toEmail);
 
-            MimeMessage message = emailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(to);
-            helper.setSubject("Bảng lương tháng " + data.get("month") + "/" + data.get("year"));
-            helper.setText(htmlContent, true);
-
-            emailSender.send(message);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to send payroll email", e);
+        } catch (MailException e) {
+            // Không throw exception → user vẫn được tạo dù mail lỗi
+            log.error("Failed to send welcome email to {}: {}", toEmail, e.getMessage());
         }
     }
 
+    /**
+     * Nội dung email plain text
+     */
+    private String buildWelcomeEmailContent(String username, String email, String rawPassword) {
+        return """
+            Xin chào %s,
 
-    public void sendVerificationEmail(String to, String subject, String text) throws MessagingException {
-        MimeMessage message = emailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(text, true);
-        emailSender.send(message);
+            Tài khoản của bạn trên hệ thống Meta HRM đã được tạo thành công.
+
+            Thông tin đăng nhập:
+            ──────────────────────────
+            Email    : %s
+            Mật khẩu : %s
+            ──────────────────────────
+
+            Vui lòng đăng nhập và đổi mật khẩu ngay sau lần đầu tiên sử dụng.
+
+            Trân trọng,
+            Meta HRM System
+            """.formatted(username, email, rawPassword);
     }
 
-    public void sendEmail(String to, String subject, String content) throws MessagingException {
-        MimeMessage message = emailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-        helper.setTo(to);
-        helper.setSubject(subject);
-        helper.setText(content, true);
-        emailSender.send(message);
+    /**
+     * Gửi email HTML tổng quát (dùng cho reset password, verify, v.v.)
+     */
+    public void sendVerificationEmail(String toEmail, String subject, String htmlContent) 
+            throws MessagingException {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true); // true = isHtml
+
+            mailSender.send(message);
+            log.info("Verification email sent to: {}", toEmail);
+
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage());
+            throw new MessagingException("Failed to send email: " + e.getMessage());
+        }
     }
 }

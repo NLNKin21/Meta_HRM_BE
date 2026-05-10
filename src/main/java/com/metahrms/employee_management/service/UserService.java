@@ -17,15 +17,18 @@ import com.metahrms.employee_management.dto.request.User.UserUpdateDto;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.dto.response.Position.PositionResponse;
 import com.metahrms.employee_management.dto.response.User.UserResponse;
+import com.metahrms.employee_management.entity.Department;
 import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.entity.User;
 import com.metahrms.employee_management.enums.UserRole;
 import com.metahrms.employee_management.enums.UserStatus;
 import com.metahrms.employee_management.exception.ResourceNotFoundException;
+import com.metahrms.employee_management.repository.DepartmentRepository;
 import com.metahrms.employee_management.repository.EmployeeRepository;
 import com.metahrms.employee_management.repository.UserRepository;
 import com.metahrms.employee_management.specification.UserSpecification;
-
+import com.metahrms.employee_management.util.PasswordGenerator;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 
@@ -35,12 +38,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
-
+    private final EmailService emailService;
     UserRepository userRepository;
     EmployeeRepository employeeRepository;
+    DepartmentRepository departmentRepository;
     BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public PagedResponse<UserResponse> getUser(UserFilterDto filterDto) {
@@ -93,18 +98,22 @@ public class UserService {
             throw new RuntimeException("Email already exists");
         }
 
+        // ✅ Auto-generate password ngẫu nhiên (bỏ qua password từ DTO)
+        String rawPassword = PasswordGenerator.generate();
+        log.info("RAW PASSWORD = {}", rawPassword);
         User user = new User();
         user.setUsername(dto.getUsername());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setPassword(passwordEncoder.encode(rawPassword)); // ✅ Hash để lưu DB
         user.setEmail(dto.getEmail());
-
-        // Use role from DTO, default to USER if not provided
         user.setRole(dto.getRole() != null ? dto.getRole() : UserRole.EMPLOYEE);
-
-        // Use status from DTO, default to ACTIVE if not provided
         user.setStatus(dto.getStatus() != null ? dto.getStatus() : UserStatus.ACTIVE);
 
         User saved = userRepository.save(user);
+
+        // ✅ Gửi email sau khi lưu thành công
+        // Nếu gửi thất bại → chỉ log, user vẫn được tạo
+        emailService.sendWelcomeEmail(saved.getEmail(), saved.getUsername(), rawPassword);
+
         return toUserResponse(saved);
     }
 
@@ -187,9 +196,18 @@ public class UserService {
         // Find the corresponding employee for the user
         Employee employee = null;
         try {
-            employee = employeeRepository.findByUserId(user.getId()).orElse(null);
+            employee = employeeRepository.findByIdWithPosition(user.getId()).orElse(null);
+            Department dept = departmentRepository.findById(employee.getDeptId()).orElse(null);
+            String deptName = dept != null ? dept.getDeptName() : null;
         } catch (Exception e) {
             // Data corruption: Multiple employees found for one user. Ignore employee details to prevent crash.
+        }
+
+        String deptName = null;
+        if (employee != null && employee.getDeptId() != null) {
+            deptName = departmentRepository.findById(employee.getDeptId())
+                    .map(Department::getDeptName) // nếu entity của bạn là getDepartmentName() thì đổi lại
+                    .orElse(null);
         }
 
         return UserResponse.builder()
@@ -208,8 +226,8 @@ public class UserService {
                 .country(employee != null?employee.getAddress():null)
                 .phoneNumber(employee != null ? employee.getPhoneNumber() : null)
                 .hireDate(employee != null ? employee.getHireDate() : null)
-                // .positionName(employee != null ? employee.getPosition().getPositionName() : null)
-                .deptName(employee != null ? employee.getDeptId() != null ? employee.getDeptId().toString() : null : null)
+                .positionName(employee != null && employee.getPosition() != null? employee.getPosition().getPositionName(): null)
+                .deptName(deptName)
                 .roleInDept(employee != null ?employee.getRoleInDept()!=null?employee.getRoleInDept():null:null)
                 .DeptId(employee!=null?employee.getDeptId():null)
                 .build();

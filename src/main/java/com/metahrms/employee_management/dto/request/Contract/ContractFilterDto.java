@@ -4,7 +4,6 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.metahrms.employee_management.enums.ContractStatus;
-import com.metahrms.employee_management.enums.ContractType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
@@ -29,18 +28,28 @@ public class ContractFilterDto {
     @Schema(description = "Filter by contract status", example = "ACTIVE")
     ContractStatus status;
 
-    @Schema(description = "Filter by contract type", example = "FULL_TIME")
-    ContractType contractType;
+    @Schema(description = "Filter by contract type ID", example = "1")
+    Integer contractTypeId;
 
     @Schema(description = "Filter by employee ID", example = "123")
     Integer empId;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    @Schema(description = "Filter by start date", example = "01/01/2024", type = "string", pattern = "dd/MM/yyyy")
+    @Schema(
+        description = "Filter by start date",
+        example = "01/01/2024",
+        type = "string",
+        pattern = "dd/MM/yyyy"
+    )
     LocalDate startDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
-    @Schema(description = "Filter by end date", example = "31/12/2024", type = "string", pattern = "dd/MM/yyyy")
+    @Schema(
+        description = "Filter by end date",
+        example = "31/12/2024",
+        type = "string",
+        pattern = "dd/MM/yyyy"
+    )
     LocalDate endDate;
 
     public static Builder builder() {
@@ -51,7 +60,7 @@ public class ContractFilterDto {
         private Integer page = 0;
         private Integer pageSize = 10;
         private ContractStatus status;
-        private ContractType contractType;
+        private Integer contractTypeId;
         private Integer empId;
         private LocalDate startDate;
         private LocalDate endDate;
@@ -71,8 +80,8 @@ public class ContractFilterDto {
             return this;
         }
 
-        public Builder contractType(ContractType contractType) {
-            this.contractType = contractType;
+        public Builder contractTypeId(Integer contractTypeId) {
+            this.contractTypeId = contractTypeId;
             return this;
         }
 
@@ -96,7 +105,7 @@ public class ContractFilterDto {
             dto.page = this.page;
             dto.pageSize = this.pageSize;
             dto.status = this.status;
-            dto.contractType = this.contractType;
+            dto.contractTypeId = this.contractTypeId;
             dto.empId = this.empId;
             dto.startDate = this.startDate;
             dto.endDate = this.endDate;

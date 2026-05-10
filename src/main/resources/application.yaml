@@ -42,19 +42,23 @@ spring:
           time_zone: Asia/Ho_Chi_Minh
     open-in-view: false
 
-  # -------------------- MAIL --------------------
+   # -------------------- MAIL --------------------
   mail:
     host: smtp.gmail.com
     port: 587
     username: ${MAIL_USERNAME:nlnhttl21@gmail.com}
-    password: ${MAIL_PASSWORD:17012003nhat}
+    password: ${MAIL_PASSWORD:yjxecgpilbgbcetv}
+    protocol: smtp
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
-
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
   # -------------------- FILE UPLOAD --------------------
   servlet:
     multipart:
@@ -77,13 +81,6 @@ server:
   error:
     include-message: always
     include-binding-errors: always
-
-# ==========================================
-# FILE UPLOAD CONFIGURATION
-# ==========================================
-app:
-  upload:
-    leave-dir: uploads/leave
 
 # ==========================================
 # JWT CONFIGURATION
@@ -187,3 +184,14 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
     name: logs/application.log
+
+# ==========================================
+# APP CUSTOM CONFIGURATION
+# ==========================================
+app:
+  upload:
+    leave-dir: uploads/leave
+
+  mail:
+    from: ${MAIL_USERNAME:nlnhttl21@gmail.com}
+    from-name: MetaHRM

@@ -30,13 +30,10 @@ public class RegisterUserDto {
     )
     String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
     @Schema(
-        description = "Password for the new account (minimum 8 characters)",
+        description = "Password for the new account (optional - auto generated if empty)",
         example = "securePassword123",
-        required = true,
-        minLength = 8
+        required = false
     )
     String password;
 

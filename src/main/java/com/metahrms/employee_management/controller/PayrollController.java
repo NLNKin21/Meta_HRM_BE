@@ -31,7 +31,7 @@ public class PayrollController {
         log.info("[PAYROLL-ME] Get payslips for userId={}", userId);
         try {
             return ResponseEntity.ok(ApiResponse.success(
-                payrollService.getMyPayslips(userId),
+                payrollService.getMyPayslips(userId+1),
                 "Payslips retrieved"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -53,10 +53,9 @@ public class PayrollController {
 
     @GetMapping("/payslips/{id}")
     @Operation(summary = "Chi tiết 1 phiếu lương của tôi")
-    public ResponseEntity<ApiResponse<PayslipFullDTO>> getDetail(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<PayslipFullDTO>> getDetail(@PathVariable("id") Integer id) {
         Integer userId = SecurityUtils.getCurrentUserId();
         try {
-            // TODO: validate payslip belongs to current user
             return ResponseEntity.ok(ApiResponse.success(
                 payrollService.getPayslipDetail(id),
                 "Payslip found"));

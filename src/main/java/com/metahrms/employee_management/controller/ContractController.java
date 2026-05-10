@@ -25,7 +25,6 @@ import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.dto.response.Contract.ContractResponse;
 import com.metahrms.employee_management.enums.ContractStatus;
-import com.metahrms.employee_management.enums.ContractType;
 import com.metahrms.employee_management.service.ContractService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,7 +61,7 @@ public class ContractController {
             @RequestParam(name = "status", required = false) ContractStatus status,
             
             @Parameter(description = "Filter by contract type")
-            @RequestParam(name = "contractType", required = false) ContractType contractType,
+            @RequestParam(name = "contractType", required = false) Integer contractTypeId,
             
             @Parameter(description = "Filter by employee ID")
             @RequestParam(name = "empId", required = false) Integer empId,
@@ -81,11 +80,12 @@ public class ContractController {
             .page(page)
             .pageSize(pageSize)
             .status(status)
-            .contractType(contractType)
+            .contractTypeId(contractTypeId)
             .empId(empId)
             .startDate(startDate)
             .endDate(endDate)
             .build();
+
 
         PagedResponse<ContractResponse> contracts = contractService.getContracts(filterDto);
 

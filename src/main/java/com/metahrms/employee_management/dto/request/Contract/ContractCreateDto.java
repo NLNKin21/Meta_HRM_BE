@@ -3,8 +3,8 @@ package com.metahrms.employee_management.dto.request.Contract;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.metahrms.employee_management.entity.ContractType;
 import com.metahrms.employee_management.enums.ContractStatus;
-import com.metahrms.employee_management.enums.ContractType;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -25,9 +25,9 @@ public class ContractCreateDto {
     @Schema(description = "ID of the employee this contract is for", example = "1", required = true)
     Integer empId;
 
-    @NotNull(message = "Contract type is required")
-    @Schema(description = "Type of contract (PROBATION/FIXED_TERM/INDEFINITE)", example = "FIXED_TERM", required = true)
-    ContractType contractType;
+    @NotNull(message = "Contract type ID is required")
+    @Schema(description = "ID of the contract type configuration", example = "1", required = true)
+    Integer contractTypeId;
 
     @NotNull(message = "Start date is required")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
@@ -89,7 +89,7 @@ public class ContractCreateDto {
         public ContractCreateDto build() {
             ContractCreateDto dto = new ContractCreateDto();
             dto.empId = this.empId;
-            dto.contractType = this.contractType;
+            dto.contractTypeId = this.contractType.getId();
             dto.startDate = this.startDate;
             dto.endDate = this.endDate;
             dto.fileUrl = this.fileUrl;

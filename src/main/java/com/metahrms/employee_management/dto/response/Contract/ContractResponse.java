@@ -32,6 +32,9 @@ public class ContractResponse {
             allowableValues = {"PERMANENT", "DEFINITE", "PROBATION", "SEASONAL", "PART_TIME", "INTERNSHIP", "FULL_TIME"})
     String contractType;
 
+    @Schema(description = "ID of the contract type", example = "1")
+    Integer contractTypeId;
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     @Schema(description = "Contract start date", example = "01/01/2024", type = "string", pattern = "dd/MM/yyyy")
     LocalDate startDate;
@@ -80,6 +83,7 @@ public class ContractResponse {
         private Integer empId;
         private String employeeName;
         private String contractType;
+        private Integer contractTypeId;
         private String previewUrl;
         private Boolean previewable;
         private String fileFormat;
@@ -107,6 +111,11 @@ public class ContractResponse {
 
         public Builder contractType(String contractType) {
             this.contractType = contractType;
+            return this;
+        }
+
+        public Builder contractTypeId(Integer contractTypeId) {
+            this.contractTypeId = contractTypeId;
             return this;
         }
 
@@ -161,6 +170,7 @@ public class ContractResponse {
             response.empId = this.empId;
             response.employeeName = this.employeeName;
             response.contractType = this.contractType;
+            response.contractTypeId = this.contractTypeId;
             response.previewUrl = this.previewUrl;
             response.previewable = this.previewable;
             response.fileFormat = this.fileFormat;

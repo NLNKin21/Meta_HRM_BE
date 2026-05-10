@@ -203,10 +203,7 @@ public class EmployeeController {
                 employeeData.getFullName(), contractData != null);
 
         try {
-            EmployeeResponse employee = employeeService.createEmployeeWithContract(
-                    employeeData,
-                    contractData,
-                    contractFile
+            EmployeeResponse employee = employeeService.createEmployeeWithContract(employeeData,contractData,contractFile
             );
 
             String message = "Tạo nhân viên thành công";
