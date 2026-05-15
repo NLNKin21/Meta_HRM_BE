@@ -21,7 +21,6 @@ import lombok.experimental.FieldDefaults;
 @Schema(description = "Data transfer object for creating a new employment contract")
 public class ContractCreateDto {
 
-    @NotNull(message = "Employee ID is required")
     @Schema(description = "ID of the employee this contract is for", example = "1", required = true)
     Integer empId;
 
@@ -30,11 +29,11 @@ public class ContractCreateDto {
     Integer contractTypeId;
 
     @NotNull(message = "Start date is required")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")    
     @Schema(description = "Contract start date", example = "01/01/2024", type = "string", pattern = "dd/MM/yyyy", required = true)
     LocalDate startDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")    
     @Schema(description = "Contract end date (optional for indefinite contracts)", example = "31/12/2025", type = "string", pattern = "dd/MM/yyyy")
     LocalDate endDate;
 

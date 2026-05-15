@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.metahrms.employee_management.entity.Employee;
+import com.metahrms.employee_management.enums.ContractStatus;
 import com.metahrms.employee_management.enums.EmployeeStatus;
 import com.metahrms.employee_management.enums.RoleInDepartment;
 
@@ -217,4 +218,37 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
      * Dùng trong Bước 3: summary report
      */
     long countByDeptIdAndIsDeletedFalse(Integer deptId);
+
+     @Query("""
+        select e
+        from Employee e
+        left join fetch e.position
+        where e.userId = :userId
+        and e.isDeleted = false
+        """)
+    Optional<Employee> findByUserIdWithPosition(@Param("userId") Integer userId);
+
+    /**
+     * Lấy employee chưa có hoặc chỉ có contract EXPIRED/TERMINATED
+     * Dùng cho dropdown tạo hợp đồng mới
+     */
+    @Query("""
+        SELECT e
+        FROM Employee e
+        WHERE e.isDeleted = false
+        AND e.status = :employeeStatus
+        AND e.id NOT IN (
+            SELECT c.empId
+            FROM Contract c
+            WHERE c.isDeleted = false
+                AND c.status IN :contractStatuses
+                AND (c.endDate IS NULL OR c.endDate >= :today)
+        )
+        ORDER BY e.fullName ASC
+    """)
+    List<Employee> findEmployeesAvailableForContract(
+            @Param("employeeStatus") EmployeeStatus employeeStatus,
+            @Param("contractStatuses") List<ContractStatus> contractStatuses,
+            @Param("today") LocalDate today
+    );
 }

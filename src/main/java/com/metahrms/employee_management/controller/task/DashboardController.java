@@ -3,6 +3,7 @@ package com.metahrms.employee_management.controller.task;
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.task.taskstatus.TaskStatsResponse;
 import com.metahrms.employee_management.service.task.TaskStatsService;
+import com.metahrms.employee_management.util.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,17 +25,16 @@ public class DashboardController {
      * Lấy thống kê tổng quan cho Dashboard
      */
     @GetMapping("/stats")
-    @Operation(summary = "Get dashboard statistics", 
-               description = "Returns comprehensive statistics for dashboard including task counts, charts data, and upcoming tasks")
+    @Operation(summary = "Get dashboard statistics")
     public ResponseEntity<ApiResponse<TaskStatsResponse>> getDashboardStats(
-            @Parameter(description = "Current user ID")
-            @RequestHeader(value = "X-User-Id", required = false) Integer userId,
             @Parameter(description = "Department ID (optional)")
             @RequestParam(value = "departmentId", required = false) Integer departmentId) {
-        
+
+        Integer userId = SecurityUtils.getCurrentUserId();
+
         TaskStatsResponse stats = statsService.getDashboardStats(userId, departmentId);
         return ResponseEntity.ok(
-            ApiResponse.success(stats, "Retrieved dashboard statistics successfully")
+                ApiResponse.success(stats, "Retrieved dashboard statistics successfully")
         );
     }
 

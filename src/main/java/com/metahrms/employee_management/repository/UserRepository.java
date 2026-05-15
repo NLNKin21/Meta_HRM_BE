@@ -18,4 +18,5 @@ public interface UserRepository extends JpaRepository<User, Integer>, JpaSpecifi
     @Query("SELECT u FROM User u WHERE u.id NOT IN (SELECT e.userId FROM Employee e WHERE e.isDeleted = false)")
     List<User> findUsersNotLinkedToEmployee();
 
+    boolean existsByUsername(String username);
 }

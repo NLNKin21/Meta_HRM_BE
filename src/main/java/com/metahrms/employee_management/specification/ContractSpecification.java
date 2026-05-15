@@ -31,24 +31,32 @@ public class ContractSpecification {
                 predicates.add(criteriaBuilder.equal(root.get("status"), status));
             }
 
-            // Filter by contract type
+            // ✅ contractType là @ManyToOne → join vào id
             if (contractTypeId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("contractType"), contractTypeId));
+                predicates.add(criteriaBuilder.equal(
+                    root.get("contractType").get("id"), contractTypeId
+                ));
             }
 
-            // Filter by employee ID
+            // ✅ empId là @Column Integer → so sánh trực tiếp
             if (empId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("empId"), empId));
+                predicates.add(criteriaBuilder.equal(
+                    root.get("empId"), empId
+                ));
             }
 
-            // Filter by start date
+            // ✅ startDate: hợp đồng bắt đầu TỪ ngày này trở đi
             if (startDate != null) {
-                predicates.add(criteriaBuilder.equal(root.get("startDate"), startDate));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
+                    root.get("startDate"), startDate
+                ));
             }
 
-            // Filter by end date
+            // ✅ endDate: hợp đồng kết thúc TRƯỚC hoặc ĐÚNG ngày này
             if (endDate != null) {
-                predicates.add(criteriaBuilder.equal(root.get("endDate"), endDate));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(
+                    root.get("endDate"), endDate
+                ));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

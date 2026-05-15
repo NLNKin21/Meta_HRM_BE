@@ -6,6 +6,8 @@ import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.dto.response.Position.PositionResponse;
 import com.metahrms.employee_management.dto.response.Position.PositionTreeResponse;
+import com.metahrms.employee_management.entity.Position;
+import com.metahrms.employee_management.repository.PositionRepository;
 import com.metahrms.employee_management.service.PositionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 public class PositionController {
 
     PositionService positionService;
+    PositionRepository positionRepository;
 
     // ===== CRUD ENDPOINTS (CŨ - GIỮ NGUYÊN) =====
 
@@ -209,4 +213,34 @@ public class PositionController {
                 .data(parents)
                 .build();
     }
+
+        /**
+         * GET /positions/department/{departmentId}
+         * Lấy danh sách positions theo phòng ban - dùng cho dropdown khi tạo nhân viên
+         */
+        @GetMapping("/department/{departmentId}")
+        public ApiResponse<List<PositionResponse>> getByDepartment(
+                @PathVariable("departmentId") Integer departmentId
+        ) {
+        List<Position> positions = positionRepository.findByDepartmentIdAndIsDeletedFalseOrderByLevelOrderAscSortOrderAsc(departmentId);
+
+        List<PositionResponse> response = positions.stream()
+                .map(p -> PositionResponse.builder()
+                        .id(p.getId())
+                        .positionCode(p.getPositionCode())
+                        .positionName(p.getPositionName())
+                        .levelOrder(p.getLevelOrder())
+                        .minSalary(p.getMinSalary())
+                        .maxSalary(p.getMaxSalary())
+                        .isActive(p.getIsActive())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ApiResponse.<List<PositionResponse>>builder()
+                .code(200)
+                .status("success")
+                .message("OK")
+                .data(response)
+                .build();
+        }
 }

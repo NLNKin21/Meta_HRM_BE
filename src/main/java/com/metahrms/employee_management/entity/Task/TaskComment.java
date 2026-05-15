@@ -1,7 +1,7 @@
 package com.metahrms.employee_management.entity.Task;
 
 import com.metahrms.employee_management.entity.BaseEntity;
-import com.metahrms.employee_management.entity.Employee;
+import com.metahrms.employee_management.entity.User;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,7 +23,7 @@ public class TaskComment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Employee user;
+    private User user;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;

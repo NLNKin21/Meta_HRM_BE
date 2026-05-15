@@ -69,4 +69,83 @@ public interface ContractRepository extends JpaRepository<Contract, Integer>, Jp
         WHERE c.isDeleted = false
     """)
     List<Contract> findAllWithContractType();
+
+    // ✅ Check employee đã có current contract chưa (dùng khi CREATE)
+    boolean existsByEmpIdAndStatusInAndIsDeletedFalse(
+        Integer empId, 
+        List<ContractStatus> statuses
+    );
+
+    // ✅ Check employee đã có current contract chưa, loại trừ 1 contract (dùng khi UPDATE)
+    boolean existsByEmpIdAndStatusInAndIsDeletedFalseAndIdNot(
+        Integer empId,
+        List<ContractStatus> statuses,
+        Integer excludeId
+    );
+
+    // ✅ Lấy lịch sử hợp đồng của 1 employee, sắp xếp mới nhất trước
+    @Query("""
+        SELECT c FROM Contract c
+        WHERE c.empId = :empId
+          AND c.isDeleted = false
+        ORDER BY c.createdAt DESC
+    """)
+    List<Contract> findContractHistoryByEmpId(@Param("empId") Integer empId);
+
+    // ✅ Lấy contract current của employee
+    @Query("""
+        SELECT c FROM Contract c
+        WHERE c.empId = :empId
+          AND c.status IN :statuses
+          AND c.isDeleted = false
+        ORDER BY c.createdAt DESC
+    """)
+    Optional<Contract> findCurrentContractByEmpId(
+        @Param("empId") Integer empId,
+        @Param("statuses") List<ContractStatus> statuses
+    );
+
+    @Query("""
+        SELECT COUNT(c) > 0
+        FROM Contract c
+        WHERE c.empId = :empId
+        AND c.isDeleted = false
+        AND c.status IN :statuses
+        AND (c.endDate IS NULL OR c.endDate >= :today)
+    """)
+    boolean existsCurrentValidContract(
+            @Param("empId") Integer empId,
+            @Param("statuses") List<ContractStatus> statuses,
+            @Param("today") LocalDate today
+    );
+
+    @Query("""
+        SELECT COUNT(c) > 0
+        FROM Contract c
+        WHERE c.empId = :empId
+        AND c.isDeleted = false
+        AND c.status IN :statuses
+        AND c.id <> :excludeId
+        AND (c.endDate IS NULL OR c.endDate >= :today)
+    """)
+    boolean existsOtherCurrentValidContract(
+            @Param("empId") Integer empId,
+            @Param("statuses") List<ContractStatus> statuses,
+            @Param("excludeId") Integer excludeId,
+            @Param("today") LocalDate today
+    );
+
+    @Query("""
+        SELECT c
+        FROM Contract c
+        WHERE c.isDeleted = false
+        AND c.status = :status
+        AND c.endDate IS NOT NULL
+        AND c.endDate < :today
+    """)
+    List<Contract> findContractsToExpire(
+            @Param("status") ContractStatus status,
+            @Param("today") LocalDate today
+    );
 }
+

@@ -99,6 +99,31 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
             @Param("endDateTime") LocalDateTime endDateTime
     );
 
+    @Query("""
+        SELECT lr
+        FROM LeaveRequest lr
+        JOIN FETCH lr.leaveType
+        WHERE lr.hrId = :hrId
+          AND lr.status IN :statuses
+          AND (
+                (lr.status = com.metahrms.employee_management.enums.Leave.LeaveStatus.APPROVED
+                    AND lr.approvedAt IS NOT NULL
+                    AND lr.approvedAt >= :startDateTime
+                    AND lr.approvedAt <= :endDateTime)
+             OR (lr.status = com.metahrms.employee_management.enums.Leave.LeaveStatus.REJECTED
+                    AND lr.updatedAt IS NOT NULL
+                    AND lr.updatedAt >= :startDateTime
+                    AND lr.updatedAt <= :endDateTime)
+          )
+        ORDER BY COALESCE(lr.approvedAt, lr.updatedAt, lr.createdAt) DESC
+    """)
+     List<LeaveRequest> findHrHistoryByStatusesAndProcessedAtRangeWithLeaveType(
+            @Param("hrId") Integer hrId,
+            @Param("statuses") List<LeaveStatus> statuses,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
     List<LeaveRequest> findByEmployeeId(Integer employeeId);
 
     List<LeaveRequest> findByManagerIdAndStatusAndApprovalStage(

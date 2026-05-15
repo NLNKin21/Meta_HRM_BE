@@ -5,6 +5,7 @@ import com.metahrms.employee_management.dto.request.task.project.ProjectUpdateRe
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.task.project.ProjectResponse;
 import com.metahrms.employee_management.service.task.ProjectService;
+import com.metahrms.employee_management.util.SecurityUtils;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -109,9 +110,10 @@ public class ProjectController {
     @PostMapping
     @Operation(summary = "Create new project", description = "Creates a new project")
     public ResponseEntity<ApiResponse<ProjectResponse>> createProject(
-            @Valid @RequestBody ProjectCreateRequest request,
-            @Parameter(description = "Current user ID", required = true)
-            @RequestHeader("X-User-Id") Integer createdBy) {
+            @Valid @RequestBody ProjectCreateRequest request) {
+        
+        // ✅ Sửa: bỏ @RequestHeader, lấy từ JWT
+        Integer createdBy = SecurityUtils.getCurrentUserId();
         
         ProjectResponse created = projectService.createProject(request, createdBy);
         return ResponseEntity.status(HttpStatus.CREATED).body(

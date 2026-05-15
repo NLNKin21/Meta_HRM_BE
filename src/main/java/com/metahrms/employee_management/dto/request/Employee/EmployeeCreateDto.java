@@ -32,6 +32,9 @@ public class EmployeeCreateDto {
     @Schema(description = "ID of the department this employee belongs to", example = "1", required = true)
     Integer deptId;
 
+    @Schema(description = "ID of the position for this employee", example = "3")
+    Integer positionId; // optional
+
     @NotBlank(message = "Full name is required")
     @Schema(description = "Full name of the employee", example = "Nguyen Van A", required = true)
     String fullName;
@@ -74,6 +77,7 @@ public class EmployeeCreateDto {
     public static class Builder {
         private Integer userId;
         private Integer deptId;
+        private Integer positionId;
         private String fullName;
         private Gender gender;
         private LocalDate dob;
@@ -91,6 +95,11 @@ public class EmployeeCreateDto {
 
         public Builder deptId(Integer deptId) {
             this.deptId = deptId;
+            return this;
+        }
+
+        public Builder positionId(Integer positionId) {
+            this.positionId = positionId;
             return this;
         }
 
@@ -143,6 +152,7 @@ public class EmployeeCreateDto {
             EmployeeCreateDto dto = new EmployeeCreateDto();
             dto.userId = this.userId;
             dto.deptId = this.deptId;
+            dto.positionId = this.positionId;
             dto.fullName = this.fullName;
             dto.gender = this.gender;
             dto.dob = this.dob;

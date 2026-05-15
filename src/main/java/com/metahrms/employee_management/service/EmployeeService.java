@@ -24,6 +24,7 @@ import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.entity.Contract;
 import com.metahrms.employee_management.entity.Department;
 import com.metahrms.employee_management.entity.Employee;
+import com.metahrms.employee_management.entity.Position;
 import com.metahrms.employee_management.entity.User;
 import com.metahrms.employee_management.enums.ContractStatus;
 import com.metahrms.employee_management.enums.EmployeeStatus;
@@ -33,6 +34,7 @@ import com.metahrms.employee_management.repository.ContractRepository;
 import com.metahrms.employee_management.repository.ContractTypeRepository;
 import com.metahrms.employee_management.repository.DepartmentRepository;
 import com.metahrms.employee_management.repository.EmployeeRepository;
+import com.metahrms.employee_management.repository.PositionRepository;
 import com.metahrms.employee_management.repository.UserRepository;
 import com.metahrms.employee_management.specification.EmployeeSpecification;
 import com.metahrms.employee_management.util.SecurityUtils;
@@ -54,6 +56,8 @@ public class EmployeeService {
     ContractRepository contractRepository;
     CloudinaryService cloudinaryService;
     ContractTypeRepository contractTypeRepository;
+    PositionRepository positionRepository;
+
 
     @Transactional(readOnly = true)
     public PagedResponse<EmployeeResponse> getEmployees(EmployeeFilterDto filterDto) {
@@ -159,6 +163,13 @@ public class EmployeeService {
         employee.setBasicSalary(createDto.getBasicSalary());
         employee.setIsDeleted(false);
         employee.setRoleInDept(roleInDept);
+
+        if (createDto.getPositionId() != null) {
+            Position position = positionRepository.findByIdAndIsDeletedFalse(createDto.getPositionId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Position not found with id: " + createDto.getPositionId()));
+            employee.setPosition(position);
+        }
 
         Employee savedEmployee = employeeRepository.save(employee);
         log.info("Employee created with ID: {}", savedEmployee.getId());

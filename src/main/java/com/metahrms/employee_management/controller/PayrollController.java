@@ -2,6 +2,8 @@ package com.metahrms.employee_management.controller;
 
 import com.metahrms.employee_management.dto.request.common.ApiResponse;
 import com.metahrms.employee_management.dto.response.payroll.*;
+import com.metahrms.employee_management.entity.Employee;
+import com.metahrms.employee_management.repository.EmployeeRepository;
 import com.metahrms.employee_management.service.payroll.PayrollService;
 import com.metahrms.employee_management.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,15 +25,23 @@ import java.util.List;
 public class PayrollController {
 
     private final PayrollService payrollService;
+    private final EmployeeRepository employeeRepository;
+
+    private Integer getCurrentEmployeeId() {
+        Integer userId = SecurityUtils.getCurrentUserId();
+        Employee employee = employeeRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Employee not found for userId: " + userId));
+        return employee.getId();
+    }
 
     @GetMapping("/payslips")
     @Operation(summary = "Lấy danh sách phiếu lương của tôi (đã duyệt/đã trả)")
     public ResponseEntity<ApiResponse<List<PayslipSummaryDTO>>> getMyPayslips() {
         Integer userId = SecurityUtils.getCurrentUserId();
-        log.info("[PAYROLL-ME] Get payslips for userId={}", userId);
+        log.info("[PAYROLL-ME] Get payslips for employeeId={}", userId);
         try {
             return ResponseEntity.ok(ApiResponse.success(
-                payrollService.getMyPayslips(userId+1),
+                payrollService.getMyPayslips(userId),
                 "Payslips retrieved"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -51,16 +61,16 @@ public class PayrollController {
         }
     }
 
-    @GetMapping("/payslips/{id}")
-    @Operation(summary = "Chi tiết 1 phiếu lương của tôi")
-    public ResponseEntity<ApiResponse<PayslipFullDTO>> getDetail(@PathVariable("id") Integer id) {
-        Integer userId = SecurityUtils.getCurrentUserId();
-        try {
-            return ResponseEntity.ok(ApiResponse.success(
-                payrollService.getPayslipDetail(id),
-                "Payslip found"));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
-    }
+    // @GetMapping("/payslips/{id}")
+    // @Operation(summary = "Chi tiết 1 phiếu lương của tôi")
+    // public ResponseEntity<ApiResponse<PayslipFullDTO>> getDetail(@PathVariable("id") Integer id) {
+    //     Integer employeeId = getCurrentEmployeeId();
+    //     try {
+    //         return ResponseEntity.ok(ApiResponse.success(
+    //             payrollService.getMyPayslipDetail(id, employeeId), // nên check ownership
+    //             "Payslip found"));
+    //     } catch (Exception e) {
+    //         return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+    //     }
+    // }
 }

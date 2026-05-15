@@ -23,15 +23,15 @@ public class ContractUpdateDto {
     @Schema(description = "ID of the new contract type", example = "1")
     Integer contractTypeId;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Schema(description = "Contract start date", example = "01/01/2024", type = "string", pattern = "dd/MM/yyyy")
     LocalDate startDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Schema(description = "Contract end date", example = "31/12/2025", type = "string", pattern = "dd/MM/yyyy")
     LocalDate endDate;
 
-    @Schema(description = "URL to the contract document in S3 storage", example = "1/contracts/contract-123.pdf")
+    @Schema(description = "URL to the contract document in cloudinary", example = "1/contracts/contract-123.pdf")
     String fileUrl;
 
     @Schema(description = "Current status of the contract", example = "ACTIVE")

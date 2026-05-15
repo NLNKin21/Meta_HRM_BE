@@ -20,6 +20,12 @@ public interface LeaveApprovalService {
 
     List<LeaveRequestResponseDto> getPendingForHr(Integer hrId);
 
+    List<LeaveRequestResponseDto> getHrHistory(
+            Integer hrId,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
     HrLeaveDashboardSummaryDto getHrDashboardSummary(Integer hrId);
 
     LeaveRequestResponseDto approve(Long leaveRequestId, LeaveApproveDto dto);

@@ -195,18 +195,16 @@ public class UserService {
     private UserResponse toUserResponse(User user) {
         // Find the corresponding employee for the user
         Employee employee = null;
-        try {
-            employee = employeeRepository.findByIdWithPosition(user.getId()).orElse(null);
-            Department dept = departmentRepository.findById(employee.getDeptId()).orElse(null);
-            String deptName = dept != null ? dept.getDeptName() : null;
-        } catch (Exception e) {
-            // Data corruption: Multiple employees found for one user. Ignore employee details to prevent crash.
-        }
-
         String deptName = null;
+        try {
+            // ✅ Sửa: dùng userId để tìm employee (WHERE e.user_id = ?)
+            employee = employeeRepository.findByUserIdWithPosition(user.getId()).orElse(null);
+            } catch (Exception e) {
+                log.error("Error fetching employee for userId {}: {}", user.getId(), e.getMessage());
+            }
         if (employee != null && employee.getDeptId() != null) {
             deptName = departmentRepository.findById(employee.getDeptId())
-                    .map(Department::getDeptName) // nếu entity của bạn là getDepartmentName() thì đổi lại
+                    .map(Department::getDeptName)
                     .orElse(null);
         }
 

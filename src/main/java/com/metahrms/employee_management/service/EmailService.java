@@ -29,6 +29,29 @@ public class EmailService {
     @Value("${app.mail.from-name}")
     private String fromName;
 
+     /**
+     * Gửi email plain text tổng quát
+     * Dùng cho: tuyển dụng, thông báo, nhắc nhở, v.v.
+     * Không throw exception → service gọi không bị crash
+     */
+    public void sendEmail(String toEmail, String subject, String textContent) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject(subject);
+            helper.setText(textContent, false);
+
+            mailSender.send(message);
+            log.info("Email sent to: {} | Subject: {}", toEmail, subject);
+
+        } catch (Exception e) {
+            log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
     /**
      * Gửi email chào mừng kèm thông tin đăng nhập
      * Nếu gửi thất bại → chỉ log, không throw exception

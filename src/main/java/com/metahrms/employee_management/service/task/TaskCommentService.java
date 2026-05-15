@@ -1,16 +1,17 @@
 package com.metahrms.employee_management.service.task;
 
-
 import com.metahrms.employee_management.dto.request.task.comment.CommentCreateRequest;
 import com.metahrms.employee_management.dto.response.task.comment.TaskCommentResponse;
 import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.entity.Task.Task;
 import com.metahrms.employee_management.entity.Task.TaskComment;
+import com.metahrms.employee_management.entity.User; 
 import com.metahrms.employee_management.exception.BusinessException;
 import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.exception.TaskException;
 import com.metahrms.employee_management.mapper.task.TaskCommentMapper;
 import com.metahrms.employee_management.repository.EmployeeRepository;
+import com.metahrms.employee_management.repository.UserRepository;
 import com.metahrms.employee_management.repository.Task.TaskCommentRepository;
 import com.metahrms.employee_management.repository.Task.TaskRepository;
 
@@ -30,22 +31,28 @@ public class TaskCommentService {
     private final TaskCommentRepository commentRepository;
     private final TaskRepository taskRepository;
     private final EmployeeRepository employeeRepository;
+    private final UserRepository userRepository;       // ✅ thêm
     private final TaskCommentMapper commentMapper;
     private final TaskHistoryService historyService;
     private final NotificationService notificationService;
 
     /**
      * Lấy tất cả comments của task
+     * currentUserId = users.id lấy từ JWT
      */
     @Transactional(readOnly = true)
     public List<TaskCommentResponse> getCommentsByTaskId(Integer taskId, Integer currentUserId) {
         log.info("Getting comments for task: {}", taskId);
+
         return commentRepository.findByTaskIdOrderByCreatedAtDesc(taskId)
             .stream()
             .map(comment -> {
-                TaskCommentResponse response = commentMapper.toResponse(comment);
-                response.setCanEdit(comment.getUser().getId().equals(currentUserId));
-                response.setCanDelete(comment.getUser().getId().equals(currentUserId));
+                boolean isOwner = comment.getUser() != null
+                        && comment.getUser().getId().equals(currentUserId);
+
+                TaskCommentResponse response = commentMapper.toResponse(comment, currentUserId);
+                response.setCanEdit(isOwner);
+                response.setCanDelete(isOwner);
                 return response;
             })
             .collect(Collectors.toList());
@@ -53,23 +60,24 @@ public class TaskCommentService {
 
     /**
      * Thêm comment vào task
+     * userId = users.id lấy từ JWT
      */
     @Transactional
     public TaskCommentResponse addComment(Integer taskId, CommentCreateRequest request, Integer userId) {
-        log.info("Adding comment to task: {} by user: {}", taskId, userId);
+        log.info("Adding comment to task: {} by userId: {}", taskId, userId);
 
         // Validate task
         Task task = taskRepository.findById(taskId)
             .orElseThrow(() -> TaskException.taskNotFound(taskId));
 
-        // Validate user
-        Employee user = employeeRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", userId));
+        // ✅ Sửa: lấy User entity từ userRepository thay vì Employee
+        User author = userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        // Create comment
+        // ✅ Sửa: truyền User entity vào builder
         TaskComment comment = TaskComment.builder()
             .task(task)
-            .user(user)
+            .user(author)  
             .content(request.getContent())
             .isDeleted(false)
             .build();
@@ -77,13 +85,17 @@ public class TaskCommentService {
         TaskComment saved = commentRepository.save(comment);
         log.info("Added comment ID: {} to task: {}", saved.getId(), taskId);
 
+        // ✅ Lấy Employee để log history và notify (cần employeeId)
+        Employee employee = employeeRepository.findByUserId(userId).orElse(null);
+        Integer employeeId = employee != null ? employee.getId() : null;
+
         // Log history
-        historyService.logCommentAdded(task, userId, request.getContent());
+        historyService.logCommentAdded(task, employeeId, request.getContent());
 
         // Notify task owner and assignee
-        notificationService.sendCommentNotification(task, user, request.getContent());
+        notificationService.sendCommentNotification(task, employee, request.getContent());
 
-        TaskCommentResponse response = commentMapper.toResponse(saved);
+        TaskCommentResponse response = commentMapper.toResponse(saved, userId);
         response.setCanEdit(true);
         response.setCanDelete(true);
 
@@ -92,25 +104,28 @@ public class TaskCommentService {
 
     /**
      * Cập nhật comment
+     * userId = users.id lấy từ JWT
      */
     @Transactional
     public TaskCommentResponse updateComment(Integer commentId, String content, Integer userId) {
-        log.info("Updating comment ID: {} by user: {}", commentId, userId);
+        log.info("Updating comment ID: {} by userId: {}", commentId, userId);
 
         TaskComment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new ResourceNotFoundException("TaskComment", "id", commentId));
 
-        // Check permission
-        if (!comment.getUser().getId().equals(userId)) {
+        // ✅ comment.getUser() là User entity
+        // comment.getUser().getId() = users.id
+        // userId = users.id từ JWT
+        // => so sánh đúng
+        if (comment.getUser() == null || !comment.getUser().getId().equals(userId)) {
             throw new BusinessException("You can only edit your own comments");
         }
 
         comment.setContent(content);
         TaskComment saved = commentRepository.save(comment);
-
         log.info("Updated comment ID: {}", commentId);
 
-        TaskCommentResponse response = commentMapper.toResponse(saved);
+        TaskCommentResponse response = commentMapper.toResponse(saved, userId);
         response.setCanEdit(true);
         response.setCanDelete(true);
 
@@ -119,25 +134,28 @@ public class TaskCommentService {
 
     /**
      * Xóa comment (soft delete)
+     * userId = users.id lấy từ JWT
      */
     @Transactional
     public void deleteComment(Integer commentId, Integer userId) {
-        log.info("Deleting comment ID: {} by user: {}", commentId, userId);
+        log.info("Deleting comment ID: {} by userId: {}", commentId, userId);
 
         TaskComment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new ResourceNotFoundException("TaskComment", "id", commentId));
 
-        // Check permission
-        if (!comment.getUser().getId().equals(userId)) {
+        // ✅ So sánh đúng: cả 2 đều là users.id
+        if (comment.getUser() == null || !comment.getUser().getId().equals(userId)) {
             throw new BusinessException("You can only delete your own comments");
         }
 
         comment.setIsDeleted(true);
         commentRepository.save(comment);
 
-        // Log history
-        historyService.logCommentDeleted(comment.getTask(), userId);
+        // ✅ Lấy employeeId để log history
+        Employee employee = employeeRepository.findByUserId(userId).orElse(null);
+        Integer employeeId = employee != null ? employee.getId() : null;
 
+        historyService.logCommentDeleted(comment.getTask(), employeeId);
         log.info("Deleted comment ID: {}", commentId);
     }
 

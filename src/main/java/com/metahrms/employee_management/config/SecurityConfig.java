@@ -41,7 +41,9 @@ public class SecurityConfig {
         "/auth/forgot-password",
         "/api/auth/login",
         "/api/auth/logout",
-        "/api/auth/forgot-password"
+        "/api/auth/forgot-password",
+        "/public/**",       
+        "/api/public/**",   
     };
     private final String[] SWAGGER_ENDPOINTS = {
         "/swagger-ui/**",
@@ -60,6 +62,8 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request -> request
                 .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers("/public/**").permitAll()    
+                .requestMatchers("/api/public/**").permitAll() 
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/locations/**").authenticated()
                 .anyRequest().authenticated()
@@ -109,22 +113,17 @@ public class SecurityConfig {
         
         configuration.setAllowCredentials(true);
         
-        // ✅ THÊM X-User-Id VÀO DANH SÁCH ALLOWED HEADERS
         configuration.setAllowedHeaders(List.of(
             "Authorization",
             "Content-Type",
-            "X-User-Id",                           // ← THÊM DÒNG NÀY
             "Access-Control-Allow-Credentials",
             "X-Requested-With",
             "Accept"
         ));
         
-        
-        // ✅ NÊN THÊM: Expose headers nếu frontend cần đọc response headers
         configuration.setExposedHeaders(List.of(
             "Authorization",
-            "Content-Type",
-            "X-User-Id"
+            "Content-Type"
         ));
         
         // ✅ NÊN THÊM: Cache preflight request

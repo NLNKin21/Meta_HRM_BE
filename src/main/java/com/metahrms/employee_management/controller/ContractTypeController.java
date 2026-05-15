@@ -1,6 +1,7 @@
 package com.metahrms.employee_management.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +22,8 @@ import com.metahrms.employee_management.dto.request.Contract.ContractTypeUpdateD
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.dto.response.Contract.ContractTypeResponse;
+import com.metahrms.employee_management.entity.ContractType;
+import com.metahrms.employee_management.repository.ContractTypeRepository;
 import com.metahrms.employee_management.service.ContractTypeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ContractTypeController {
 
     ContractTypeService contractTypeService;
+    ContractTypeRepository contractTypeRepository;
 
     // ─────────────────────────────────────────────────────────────
     // GET LIST (phân trang + filter)
@@ -129,7 +133,7 @@ public class ContractTypeController {
     @PutMapping("/{id}")
     public ApiResponse<ContractTypeResponse> updateContractType(
             @Parameter(description = "Contract type ID", example = "1")
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestBody ContractTypeUpdateDto updateDto) {
 
         log.info("PUT /contract-types/{}", id);
@@ -149,7 +153,7 @@ public class ContractTypeController {
     @PatchMapping("/{id}/toggle")
     public ApiResponse<ContractTypeResponse> toggleActive(
             @Parameter(description = "Contract type ID", example = "1")
-            @PathVariable Integer id) {
+            @PathVariable("id") Integer id) {
 
         log.info("PATCH /contract-types/{}/toggle", id);
 
@@ -169,7 +173,7 @@ public class ContractTypeController {
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteContractType(
             @Parameter(description = "Contract type ID", example = "1")
-            @PathVariable Integer id) {
+            @PathVariable("id") Integer id) {
 
         log.info("DELETE /contract-types/{}", id);
 
@@ -181,4 +185,28 @@ public class ContractTypeController {
                 .message("Contract type deleted successfully")
                 .build();
     }
+
+    @GetMapping("/contract-types/active")
+        public ApiResponse<List<ContractTypeResponse>> getActiveContractTypes() {
+        List<ContractType> types = contractTypeRepository.findAllActiveTypes();
+        
+        List<ContractTypeResponse> response = types.stream()
+                .map(ct -> ContractTypeResponse.builder()
+                .id(ct.getId())
+                .typeCode(ct.getTypeCode())
+                .typeName(ct.getTypeName())
+                .description(ct.getDescription())
+                .durationUnit(ct.getDurationUnit())
+                .durationValue(ct.getDurationValue())
+                .requireFile(ct.getRequireFile())
+                .build())
+                .collect(Collectors.toList());
+        
+        return ApiResponse.<List<ContractTypeResponse>>builder()
+                .code(200)
+                .status("success")
+                .message("Lấy danh sách loại hợp đồng thành công")
+                .data(response)
+                .build();
+        }
 }

@@ -3,6 +3,7 @@ package com.metahrms.employee_management.controller.task;
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.task.notification.NotificationResponse;
 import com.metahrms.employee_management.service.task.NotificationService;
+import com.metahrms.employee_management.util.SecurityUtils; // ✅ thêm import
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,88 +26,70 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    /**
-     * GET /api/notifications
-     * Lấy notifications của user (có phân trang)
-     */
     @GetMapping
-    @Operation(summary = "Get user notifications", description = "Returns paginated notifications for current user")
+    @Operation(summary = "Get user notifications")
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getNotifications(
-            @Parameter(description = "Current user ID", required = true)
-            @RequestHeader("X-User-Id") Integer userId,
-            @Parameter(description = "Page number", example = "0")
             @RequestParam(name = "page", defaultValue = "0") int page,
-            @Parameter(description = "Page size", example = "20")
             @RequestParam(name = "size", defaultValue = "20") int size) {
-        
+
+        // ✅ Sửa: bỏ @RequestHeader, lấy từ JWT
+        Integer userId = SecurityUtils.getCurrentUserId();
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<NotificationResponse> notifications = notificationService.getNotificationsByUser(userId, pageable);
         return ResponseEntity.ok(
-            ApiResponse.success(notifications, "Retrieved notifications successfully")
+                ApiResponse.success(notifications, "Retrieved notifications successfully")
         );
     }
 
-    /**
-     * GET /api/notifications/unread
-     * Lấy unread notifications
-     */
     @GetMapping("/unread")
-    @Operation(summary = "Get unread notifications", description = "Returns all unread notifications for current user")
-    public ResponseEntity<ApiResponse<List<NotificationResponse>>> getUnreadNotifications(
-            @Parameter(description = "Current user ID", required = true)
-            @RequestHeader("X-User-Id") Integer userId) {
-        
+    @Operation(summary = "Get unread notifications")
+    public ResponseEntity<ApiResponse<List<NotificationResponse>>> getUnreadNotifications() {
+
+        // ✅ Sửa: bỏ @RequestHeader, lấy từ JWT
+        Integer userId = SecurityUtils.getCurrentUserId();
+
         List<NotificationResponse> notifications = notificationService.getUnreadNotifications(userId);
         return ResponseEntity.ok(
-            ApiResponse.success(notifications, "Retrieved unread notifications successfully")
+                ApiResponse.success(notifications, "Retrieved unread notifications successfully")
         );
     }
 
-    /**
-     * GET /api/notifications/unread/count
-     * Đếm unread notifications
-     */
     @GetMapping("/unread/count")
-    @Operation(summary = "Count unread notifications", description = "Returns count of unread notifications")
-    public ResponseEntity<ApiResponse<Long>> countUnread(
-            @Parameter(description = "Current user ID", required = true)
-            @RequestHeader("X-User-Id") Integer userId) {
-        
+    @Operation(summary = "Count unread notifications")
+    public ResponseEntity<ApiResponse<Long>> countUnread() {
+
+        // ✅ Sửa: bỏ @RequestHeader, lấy từ JWT
+        Integer userId = SecurityUtils.getCurrentUserId();
+
         Long count = notificationService.countUnread(userId);
         return ResponseEntity.ok(
-            ApiResponse.success(count, "Retrieved unread count successfully")
+                ApiResponse.success(count, "Retrieved unread count successfully")
         );
     }
 
-    /**
-     * PUT /api/notifications/{id}/read
-     * Đánh dấu notification đã đọc
-     */
     @PutMapping("/{id}/read")
-    @Operation(summary = "Mark notification as read", description = "Marks a single notification as read")
+    @Operation(summary = "Mark notification as read")
     public ResponseEntity<ApiResponse<Void>> markAsRead(
-            @Parameter(description = "Notification ID", required = true)
             @PathVariable("id") Integer id) {
-        
+
+        // không cần userId - giữ nguyên
         notificationService.markAsRead(id);
         return ResponseEntity.ok(
-            ApiResponse.successMessage("Notification marked as read")
+                ApiResponse.successMessage("Notification marked as read")
         );
     }
 
-    /**
-     * PUT /api/notifications/read-all
-     * Đánh dấu tất cả đã đọc
-     */
     @PutMapping("/read-all")
-    @Operation(summary = "Mark all as read", description = "Marks all notifications as read for current user")
-    public ResponseEntity<ApiResponse<Void>> markAllAsRead(
-            @Parameter(description = "Current user ID", required = true)
-            @RequestHeader("X-User-Id") Integer userId) {
-        
+    @Operation(summary = "Mark all as read")
+    public ResponseEntity<ApiResponse<Void>> markAllAsRead() {
+
+        // ✅ Sửa: bỏ @RequestHeader, lấy từ JWT
+        Integer userId = SecurityUtils.getCurrentUserId();
+
         notificationService.markAllAsRead(userId);
         return ResponseEntity.ok(
-            ApiResponse.successMessage("All notifications marked as read")
+                ApiResponse.successMessage("All notifications marked as read")
         );
     }
 }

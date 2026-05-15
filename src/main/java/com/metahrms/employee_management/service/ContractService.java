@@ -1,6 +1,7 @@
 package com.metahrms.employee_management.service;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,11 +18,13 @@ import com.metahrms.employee_management.dto.request.Contract.ContractCreateDto;
 import com.metahrms.employee_management.dto.request.Contract.ContractFilterDto;
 import com.metahrms.employee_management.dto.request.Contract.ContractUpdateDto;
 import com.metahrms.employee_management.dto.response.Contract.ContractResponse;
+import com.metahrms.employee_management.dto.response.Employee.EmployeeContractDto;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.entity.Contract;
 import com.metahrms.employee_management.entity.ContractType;
 import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.enums.ContractStatus;
+import com.metahrms.employee_management.enums.EmployeeStatus;
 import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.repository.ContractRepository;
 import com.metahrms.employee_management.repository.ContractTypeRepository;
@@ -42,6 +45,8 @@ public class ContractService {
     EmployeeRepository employeeRepository;
     CloudinaryService cloudinaryService;
     ContractTypeRepository contractTypeRepository;
+
+    private static final List<ContractStatus> CURRENT_STATUSES = List.of(ContractStatus.ACTIVE, ContractStatus.PENDING);
 
     /**
      * Get contracts with filtering and pagination
@@ -101,44 +106,124 @@ public class ContractService {
     }
 
     /**
+     * Lấy lịch sử hợp đồng của employee
+     * Dùng cho cả HR và employee tự xem
+     */
+    @Transactional(readOnly = true)
+    public List<ContractResponse> getContractHistoryByEmployee(Integer empId) {
+        log.info("Fetching contract history for employee: {}", empId);
+
+        // Verify employee tồn tại
+        employeeRepository.findById(empId)
+            .orElseThrow(() -> new ResourceNotFoundException("Employee not found: " + empId));
+
+        List<Contract> contracts = contractRepository.findContractHistoryByEmpId(empId);
+
+        return contracts.stream()
+            .map(this::toContractResponse)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * ✅ Lấy contract hiện tại của employee
+     */
+    @Transactional(readOnly = true)
+    public ContractResponse getCurrentContractByEmployee(Integer empId) {
+        log.info("Fetching current contract for employee: {}", empId);
+
+        return contractRepository.findCurrentContractByEmpId(empId, CURRENT_STATUSES)
+            .map(this::toContractResponse)
+            .orElse(null);
+    }
+
+    /**
+     * ✅ Lấy danh sách employee có thể tạo contract mới
+     */
+    @Transactional(readOnly = true)
+    public List<EmployeeContractDto> getEmployeesAvailableForContract() {
+        List<Employee> employees = employeeRepository.findEmployeesAvailableForContract(
+            EmployeeStatus.ACTIVE,
+            CURRENT_STATUSES,
+            java.time.LocalDate.now()
+        );
+
+        return employees.stream()
+            .map(e -> EmployeeContractDto.builder()
+                .id(e.getId())
+                .fullName(e.getFullName())
+                .employeeCode("EMP" + e.getId())
+                .departmentName(e.getDeptId() != null ? "Phòng ban #" + e.getDeptId() : null)
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void autoExpireContracts() {
+        LocalDate today = LocalDate.now();
+
+        List<Contract> contracts = contractRepository.findContractsToExpire(
+            ContractStatus.ACTIVE,
+            today
+        );
+
+        for (Contract contract : contracts) {
+            contract.setStatus(ContractStatus.EXPIRED);
+        }
+
+        contractRepository.saveAll(contracts);
+
+        log.info("Auto expired {} contracts", contracts.size());
+    }
+
+    /**
      * Create contract with file upload
      */
     @Transactional
-    public ContractResponse createContract(ContractCreateDto createDto, MultipartFile file) 
+    public ContractResponse createContract(ContractCreateDto createDto, MultipartFile file)
             throws IOException {
         log.info("Creating contract for employee: {}", createDto.getEmpId());
 
-        ContractType contractType = contractTypeRepository
-    .findById(createDto.getContractTypeId())
-    .orElseThrow(() -> new ResourceNotFoundException(
-        "Contract type not found: " + createDto.getContractTypeId()));
-
-        Employee employee = employeeRepository.findById(createDto.getEmpId())
+        // ✅ Validate employee tồn tại
+        employeeRepository.findById(createDto.getEmpId())
             .orElseThrow(() -> new ResourceNotFoundException(
-                "Employee not found with id: " + createDto.getEmpId()));
+                "Employee not found: " + createDto.getEmpId()));
 
-        // ✅ Upload file với method mới - trả về đầy đủ thông tin
+        // ✅ Chặn nếu employee đã có contract đang hiệu lực
+        boolean hasCurrentContract = contractRepository.existsCurrentValidContract(
+            createDto.getEmpId(),
+            CURRENT_STATUSES,
+            java.time.LocalDate.now()
+        );
+
+        if (hasCurrentContract) {
+            throw new IllegalStateException(
+                "Nhân viên này đã có hợp đồng đang hiệu lực hoặc chờ ký. " +
+                "Vui lòng kết thúc hợp đồng hiện tại trước khi tạo mới."
+            );
+        }
+
+        // ✅ Validate contract type
+        ContractType contractType = contractTypeRepository
+            .findById(createDto.getContractTypeId())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Contract type not found: " + createDto.getContractTypeId()));
+
+        // Upload file
         String fileUrl = null;
         String fileKey = null;
         String previewUrl = null;
         String fileFormat = null;
         boolean previewable = false;
-        
 
         if (file != null && !file.isEmpty()) {
-            CloudinaryService.UploadResult uploadResult = 
+            CloudinaryService.UploadResult uploadResult =
                 cloudinaryService.uploadContractFile(file);
-            
+
             fileUrl = uploadResult.getFileUrl();
             fileKey = uploadResult.getPublicId();
             previewUrl = uploadResult.getPreviewUrl();
             fileFormat = uploadResult.getFormat();
             previewable = uploadResult.isPreviewable();
-            
-            log.info("File uploaded: url={}, previewUrl={}, previewable={}", 
-                fileUrl, previewUrl, previewable);
-
-                
         }
 
         Contract contract = Contract.builder()
@@ -148,35 +233,56 @@ public class ContractService {
             .endDate(createDto.getEndDate())
             .fileUrl(fileUrl)
             .fileKey(fileKey)
-            .previewUrl(previewUrl)      // ✅ Lưu preview URL
-            .fileFormat(fileFormat)       // ✅ Lưu format
-            .previewable(previewable)    // ✅ Lưu flag
-            .status(createDto.getStatus() != null 
+            .previewUrl(previewUrl)
+            .fileFormat(fileFormat)
+            .previewable(previewable)
+            .status(createDto.getStatus() != null
                 ? createDto.getStatus() : ContractStatus.ACTIVE)
             .build();
 
         contract.setIsDeleted(false);
-        Contract savedContract = contractRepository.save(contract);
-        
-        log.info("Contract created with id: {}", savedContract.getId());
-        return toContractResponse(savedContract);
-    }
+        Contract saved = contractRepository.save(contract);
 
+        log.info("Contract created: {}", saved.getId());
+        return toContractResponse(saved);
+    }
     /**
      * Update contract (including file replacement)
      */
     @Transactional
-    public ContractResponse updateContract(Integer id, ContractUpdateDto updateDto, MultipartFile file) throws IOException {
-        log.info("Updating contract with id: {}", id);
+    public ContractResponse updateContract(
+            Integer id,
+            ContractUpdateDto updateDto,
+            MultipartFile file) throws IOException {
 
         Contract contract = contractRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Contract not found: " + id));
 
         if (Boolean.TRUE.equals(contract.getIsDeleted())) {
             throw new IllegalStateException("Cannot update deleted contract");
         }
 
-        // ✅ Update basic fields
+        // ✅ Nếu đang update sang status current
+        // → check không có contract current nào khác của cùng employee
+        if (updateDto.getStatus() != null &&
+            CURRENT_STATUSES.contains(updateDto.getStatus())) {
+
+            boolean hasOtherCurrent = contractRepository.existsOtherCurrentValidContract(
+                contract.getEmpId(),
+                CURRENT_STATUSES,
+                id,
+                java.time.LocalDate.now()
+            );
+
+            if (hasOtherCurrent) {
+                throw new IllegalStateException(
+                    "Nhân viên này đã có hợp đồng khác đang hiệu lực. " +
+                    "Không thể có 2 hợp đồng current cùng lúc."
+                );
+            }
+        }
+
+        // Update fields
         if (updateDto.getContractTypeId() != null) {
             ContractType newType = contractTypeRepository
                 .findById(updateDto.getContractTypeId())
@@ -184,41 +290,27 @@ public class ContractService {
                     "Contract type not found: " + updateDto.getContractTypeId()));
             contract.setContractType(newType);
         }
-        if (updateDto.getStartDate() != null) {
-            contract.setStartDate(updateDto.getStartDate());
-        }
-        if (updateDto.getEndDate() != null) {
-            contract.setEndDate(updateDto.getEndDate());
-        }
-        if (updateDto.getStatus() != null) {
-            contract.setStatus(updateDto.getStatus());
-        }
+        if (updateDto.getStartDate() != null) contract.setStartDate(updateDto.getStartDate());
+        if (updateDto.getEndDate() != null) contract.setEndDate(updateDto.getEndDate());
+        if (updateDto.getStatus() != null) contract.setStatus(updateDto.getStatus());
 
-        // ✅ Update file (nếu có file mới)
+        // Update file
         if (file != null && !file.isEmpty()) {
-            // Xóa file cũ trên Cloudinary (nếu có)
             if (contract.getFileKey() != null && !contract.getFileKey().isEmpty()) {
                 try {
                     cloudinaryService.deleteFile(contract.getFileKey());
-                    log.info("Old file deleted: {}", contract.getFileKey());
                 } catch (IOException e) {
                     log.warn("Failed to delete old file: {}", e.getMessage());
                 }
             }
-
-            // Upload file mới
             String newFileUrl = cloudinaryService.uploadFile(file);
             String newFileKey = cloudinaryService.extractPublicId(newFileUrl);
-
             contract.setFileUrl(newFileUrl);
             contract.setFileKey(newFileKey);
-            log.info("New file uploaded: {}", newFileUrl);
         }
 
-        Contract updatedContract = contractRepository.save(contract);
-        log.info("Contract updated successfully: {}", id);
-
-        return toContractResponse(updatedContract);
+        Contract updated = contractRepository.save(contract);
+        return toContractResponse(updated);
     }
 
     /**
@@ -226,34 +318,25 @@ public class ContractService {
      */
     @Transactional
     public void deleteContract(Integer id) throws IOException {
-        log.info("Deleting contract with id: {}", id);
-
         Contract contract = contractRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Contract not found: " + id));
 
-        // ✅ Xóa file trên Cloudinary (nếu có)
         if (contract.getFileKey() != null && !contract.getFileKey().isEmpty()) {
             try {
                 cloudinaryService.deleteFile(contract.getFileKey());
-                log.info("File deleted from Cloudinary: {}", contract.getFileKey());
             } catch (IOException e) {
-                log.error("Failed to delete file from Cloudinary: {}", e.getMessage());
-                // Vẫn tiếp tục soft delete contract
+                log.error("Failed to delete file: {}", e.getMessage());
             }
         }
 
-        // ✅ Soft delete contract
         contract.setIsDeleted(true);
         contractRepository.save(contract);
-        log.info("Contract soft deleted successfully: {}", id);
     }
-
     
     /**
      * Convert Contract entity to ContractResponse DTO
      */
     private ContractResponse toContractResponse(Contract contract) {
-        // Get employee information
         String employeeName = null;
         if (contract.getEmpId() != null) {
             employeeName = employeeRepository.findById(contract.getEmpId())
@@ -265,12 +348,15 @@ public class ContractService {
             .id(contract.getId())
             .empId(contract.getEmpId())
             .employeeName(employeeName)
-            .contractType(contract.getContractType() != null? contract.getContractType().getTypeName(): null)
-            .contractTypeId(contract.getContractType() != null? contract.getContractType().getId(): null)
+            .contractType(contract.getContractType() != null
+                ? contract.getContractType().getTypeName() : null)
+            .contractTypeId(contract.getContractType() != null
+                ? contract.getContractType().getId() : null)
             .startDate(contract.getStartDate())
             .endDate(contract.getEndDate())
-            .fileUrl(contract.getFileUrl())  // ✅ Trả về URL trực tiếp từ Cloudinary
-            .fileKey(contract.getFileKey())  // ✅ Thêm fileKey cho frontend
+            .fileUrl(contract.getFileUrl())
+            .fileKey(contract.getFileKey())
+            .previewUrl(contract.getPreviewUrl())
             .status(contract.getStatus() != null ? contract.getStatus().name() : null)
             .createdAt(contract.getCreatedAt())
             .build();

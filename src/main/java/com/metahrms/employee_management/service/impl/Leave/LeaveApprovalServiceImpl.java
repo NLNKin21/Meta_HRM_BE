@@ -87,6 +87,28 @@ public class LeaveApprovalServiceImpl implements LeaveApprovalService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<LeaveRequestResponseDto> getHrHistory(
+            Integer hrId,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
+        return leaveRequestRepository
+                .findHrHistoryByStatusesAndProcessedAtRangeWithLeaveType(
+                        hrId,
+                        List.of(LeaveStatus.APPROVED, LeaveStatus.REJECTED),
+                        startDateTime,
+                        endDateTime
+                )
+                .stream()
+                .map(this::map)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<LeaveRequestResponseDto> getManagerHistory(
             Integer managerId,
             LocalDate startDate,

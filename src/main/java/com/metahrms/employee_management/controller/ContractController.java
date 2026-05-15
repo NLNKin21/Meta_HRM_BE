@@ -2,6 +2,7 @@ package com.metahrms.employee_management.controller;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,7 @@ import com.metahrms.employee_management.dto.request.Contract.ContractUpdateDto;
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.PagedResponse;
 import com.metahrms.employee_management.dto.response.Contract.ContractResponse;
+import com.metahrms.employee_management.dto.response.Employee.EmployeeContractDto;
 import com.metahrms.employee_management.enums.ContractStatus;
 import com.metahrms.employee_management.service.ContractService;
 
@@ -68,11 +70,11 @@ public class ContractController {
             
             @Parameter(description = "Filter by start date (format: dd/MM/yyyy)", example = "01/01/2024")
             @RequestParam(name = "startDate", required = false)
-            @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate startDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             
             @Parameter(description = "Filter by end date (format: dd/MM/yyyy)", example = "31/12/2024")
             @RequestParam(name = "endDate", required = false)
-            @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate endDate) {
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         log.info("GET /contracts - page: {}, size: {}", page, pageSize);
 
@@ -218,5 +220,69 @@ public class ContractController {
                 .message("Failed to delete file: " + e.getMessage())
                 .build();
         }
+    }
+
+    /**
+     * ✅ Lấy lịch sử hợp đồng của employee
+     * HR dùng: GET /contracts/employee/{empId}/history
+     * Employee tự xem: GET /contracts/employee/{empId}/history
+     */
+    @Operation(summary = "Get contract history by employee")
+    @GetMapping("/employee/{empId}/history")
+    public ApiResponse<List<ContractResponse>> getContractHistory(
+            @PathVariable("empId") Integer empId) {
+
+        log.info("GET /contracts/employee/{}/history", empId);
+
+        List<ContractResponse> history = contractService.getContractHistoryByEmployee(empId);
+
+        return ApiResponse.<List<ContractResponse>>builder()
+            .code(200)
+            .status("success")
+            .message("Get contract history successfully")
+            .data(history)
+            .build();
+    }
+
+    /**
+     * Lấy contract hiện tại của employee
+     */
+    @Operation(summary = "Get current contract of employee")
+    @GetMapping("/employee/{empId}/current")
+    public ApiResponse<ContractResponse> getCurrentContract(
+            @PathVariable("empId") Integer empId) {
+
+        log.info("GET /contracts/employee/{}/current", empId);
+
+        ContractResponse current = contractService.getCurrentContractByEmployee(empId);
+
+        return ApiResponse.<ContractResponse>builder()
+            .code(200)
+            .status("success")
+            .message(current != null
+                ? "Get current contract successfully"
+                : "No active contract found")
+            .data(current)
+            .build();
+    }
+
+    /**
+     * Lấy danh sách employee có thể tạo contract mới
+     */
+    @Operation(summary = "Get employees available for new contract")
+    @GetMapping("/available-employees")
+    public ApiResponse<List<EmployeeContractDto>> getAvailableEmployees() {
+
+        log.info("GET /contracts/available-employees");
+
+        List<EmployeeContractDto> employees =
+            contractService.getEmployeesAvailableForContract();
+
+        return ApiResponse.<List<EmployeeContractDto>>builder()
+            .code(200)
+            .status("success")
+            .message("Get available employees successfully")
+            .data(employees)
+            .build();
     }
 }
