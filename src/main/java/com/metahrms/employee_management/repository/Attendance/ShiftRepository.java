@@ -52,4 +52,6 @@ public interface ShiftRepository extends JpaRepository<Shift, Integer> {
      */
     @Query("SELECT COUNT(e) FROM Employee e WHERE e.shift.id = :shiftId AND e.isDeleted = false")
     long countEmployeesByShiftId(@Param("shiftId") Integer shiftId);
+    // Tìm ca mặc định theo code HC
+    Optional<Shift> findByCodeAndIsActiveTrueAndIsDeletedFalse(String code);
 }

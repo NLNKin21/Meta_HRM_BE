@@ -22,6 +22,7 @@ public interface CandidateRepository extends JpaRepository<Candidate, Integer>,
         JpaSpecificationExecutor<Candidate> {
 
     // ========== TÌM KIẾM CƠ BẢN ==========
+    Optional<Candidate> findByCreatedUserIdAndIsDeletedFalse(Integer createdUserId);
 
     Optional<Candidate> findByIdAndIsDeletedFalse(Integer id);
 

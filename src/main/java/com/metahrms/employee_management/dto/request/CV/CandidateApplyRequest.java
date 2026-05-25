@@ -1,5 +1,8 @@
 package com.metahrms.employee_management.dto.request.CV;
 
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.metahrms.employee_management.enums.Gender;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,8 +35,9 @@ public class CandidateApplyRequest {
     @Schema(description = "Số điện thoại", example = "0901234567")
     String phoneNumber;
 
-    @Schema(description = "Ngày sinh (dd/MM/yyyy)", example = "15/06/1998")
-    String dob;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Schema(description = "Ngày sinh (yyyy-MM-dd)", example = "1998-06-15")
+    LocalDate dob;
 
     @Schema(description = "Giới tính", example = "MALE")
     Gender gender;

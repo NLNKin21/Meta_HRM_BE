@@ -264,10 +264,9 @@ public class TaskController {
     @PutMapping("/{id}")
     @Operation(summary = "Update task")
     public ResponseEntity<ApiResponse<TaskResponse>> updateTask(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @Valid @RequestBody TaskUpdateRequest request
     ) {
-        // ✅ Sửa: bỏ @RequestHeader, lấy từ JWT
         Integer updatedBy = SecurityUtils.getCurrentUserId();
         log.info("PUT /tasks/{} - Updating task by userId: {}", id, updatedBy);
 

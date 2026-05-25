@@ -51,6 +51,7 @@ dependencies {
 	// export excel
 	implementation("org.apache.poi:poi:5.2.5")
     implementation("org.apache.poi:poi-ooxml:5.2.5")
+	
 
     // Apache HttpClient
     implementation("org.apache.httpcomponents.client5:httpclient5")
@@ -59,11 +60,17 @@ dependencies {
 	// Image processing
     implementation("org.imgscalr:imgscalr-lib:4.2")
     // Apache Commons IO
-    implementation("commons-io:commons-io:2.11.0")
+    implementation("commons-io:commons-io:2.16.1")
     // Resilience4j (Circuit Breaker)
     implementation("io.github.resilience4j:resilience4j-spring-boot2:2.1.0")
     // AOP
     implementation("org.springframework.boot:spring-boot-starter-aop")
+}
+
+configurations.configureEach {
+    resolutionStrategy {
+        force("commons-io:commons-io:2.16.1")
+    }
 }
 
 tasks.withType<JavaCompile> {

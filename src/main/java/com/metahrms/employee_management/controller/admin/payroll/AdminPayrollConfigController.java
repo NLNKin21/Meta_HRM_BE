@@ -37,7 +37,7 @@ public class AdminPayrollConfigController {
     @GetMapping("/group/{group}")
     @Operation(summary = "Lấy cấu hình theo nhóm (INSURANCE, TAX, OT, PENALTY, GENERAL)")
     public ResponseEntity<ApiResponse<List<PayrollConfigDTO>>> getByGroup(
-            @PathVariable String group) {
+            @PathVariable("group") String group) {
         return ResponseEntity.ok(ApiResponse.success(
             configService.getByGroup(group), "Config retrieved"));
     }
@@ -45,7 +45,7 @@ public class AdminPayrollConfigController {
     @GetMapping("/{key}")
     @Operation(summary = "Lấy 1 cấu hình theo key")
     public ResponseEntity<ApiResponse<PayrollConfigDTO>> getByKey(
-            @PathVariable String key) {
+            @PathVariable("key") String key) {
         try {
             return ResponseEntity.ok(ApiResponse.success(
                 configService.getByKey(key), "Config found"));
@@ -57,7 +57,7 @@ public class AdminPayrollConfigController {
     @PutMapping("/{key}")
     @Operation(summary = "Cập nhật cấu hình theo key")
     public ResponseEntity<ApiResponse<PayrollConfigDTO>> update(
-            @PathVariable String key,
+            @PathVariable("key") String key,
             @Valid @RequestBody UpdateConfigRequest request) {
         log.info("[PAYROLL-CONFIG] Update key={}, value={}", key, request.getConfigValue());
         try {

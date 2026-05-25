@@ -4,6 +4,7 @@ import com.metahrms.employee_management.dto.request.CV.CandidateApproveRequest;
 import com.metahrms.employee_management.dto.request.CV.CandidateFilterRequest;
 import com.metahrms.employee_management.dto.response.ApiResponse;
 import com.metahrms.employee_management.dto.response.CV.CandidateOnboardResponse;
+import com.metahrms.employee_management.dto.response.CV.CandidatePrefillResponse;
 import com.metahrms.employee_management.dto.response.CV.CandidateResponse;
 import com.metahrms.employee_management.dto.response.CV.RecruitmentHistoryResponse;
 import com.metahrms.employee_management.dto.response.CV.RecruitmentStatsResponse;
@@ -244,6 +245,18 @@ public class RecruitmentController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(response, "Từ chối ứng viên thành công")
+        );
+        }
+
+        @GetMapping("/candidates/by-user/{userId}")
+        @Operation(summary = "Lấy thông tin ứng viên theo userId để prefill tạo employee")
+        public ResponseEntity<ApiResponse<CandidatePrefillResponse>> getCandidateByUserId(
+                @PathVariable("userId") Integer userId
+        ) {
+        CandidatePrefillResponse response = candidateService.getCandidatePrefillByUserId(userId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(response, "Lấy thông tin ứng viên thành công")
         );
         }
 }

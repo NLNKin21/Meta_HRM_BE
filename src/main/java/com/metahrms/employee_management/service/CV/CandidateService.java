@@ -3,6 +3,7 @@ package com.metahrms.employee_management.service.CV;
 
 import com.metahrms.employee_management.dto.request.CV.CandidateApplyRequest;
 import com.metahrms.employee_management.dto.request.CV.CandidateFilterRequest;
+import com.metahrms.employee_management.dto.response.CV.CandidatePrefillResponse;
 import com.metahrms.employee_management.dto.response.CV.CandidateResponse;
 import com.metahrms.employee_management.dto.response.CV.RecruitmentStatsResponse;
 import com.metahrms.employee_management.entity.CV.Candidate;
@@ -77,14 +78,7 @@ public class CandidateService {
         }
 
         // 3. Parse ngày sinh
-        LocalDate dob = null;
-        if (request.getDob() != null && !request.getDob().isBlank()) {
-            try {
-                dob = LocalDate.parse(request.getDob(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            } catch (Exception e) {
-                log.warn("[RECRUIT] Invalid dob format: {}", request.getDob());
-            }
-        }
+        LocalDate dob = request.getDob();
 
         // 4. Tạo Candidate
         Candidate candidate = Candidate.builder()
@@ -386,5 +380,26 @@ public class CandidateService {
         } catch (Exception e) {
             log.error("[RECRUIT] Failed to send status update email", e);
         }
+    }
+
+    public CandidatePrefillResponse getCandidatePrefillByUserId(Integer userId) {
+        Candidate candidate = candidateRepository
+                .findByCreatedUserIdAndIsDeletedFalse(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy hồ sơ ứng viên cho userId: " + userId));
+
+        return CandidatePrefillResponse.builder()
+                .candidateId(candidate.getId())
+                .userId(userId)
+                .fullName(candidate.getFullName())
+                .email(candidate.getEmail())
+                .phoneNumber(candidate.getPhoneNumber())
+                .dob(candidate.getDob())
+                .gender(candidate.getGender())
+                .address(candidate.getAddress())
+                .departmentId(candidate.getDepartmentId())
+                .desiredPosition(candidate.getDesiredPosition())
+                .expectedSalary(candidate.getExpectedSalary())
+                .status(candidate.getStatus())
+                .build();
     }
 }

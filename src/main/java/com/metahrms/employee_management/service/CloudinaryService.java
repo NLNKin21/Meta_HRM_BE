@@ -160,6 +160,35 @@ public class CloudinaryService {
     }
 
     /**
+     * Upload file báo cáo task (image hoặc PDF)
+     * Lưu vào folder: metahrm/task-reports/
+     */
+    public String uploadReportFile(MultipartFile file, Integer userId) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        String ext = getFileExtension(originalFilename);
+        String resourceType = determineResourceType(ext, file.getContentType());
+
+        String publicId = "report_" + userId + "_" + System.currentTimeMillis();
+
+        Map<String, Object> params = ObjectUtils.asMap(
+            "folder",           baseFolder + "/task-reports",
+            "public_id",        publicId,
+            "resource_type",    resourceType,
+            "access_mode",      "public",
+            "type",             "upload",
+            "use_filename",     true,
+            "unique_filename",  true,
+            "overwrite",        false
+        );
+
+        Map<String, Object> result = cloudinary.uploader().upload(file.getBytes(), params);
+        String secureUrl = (String) result.get("secure_url");
+
+        log.info("[CLOUDINARY] Report uploaded: url={}, userId={}", secureUrl, userId);
+        return secureUrl;
+    }
+
+    /**
      * ✅ Tạo preview URL
      * Cloudinary có thể transform PDF thành ảnh để preview
      */

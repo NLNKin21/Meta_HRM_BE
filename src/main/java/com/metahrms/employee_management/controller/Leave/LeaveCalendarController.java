@@ -18,8 +18,8 @@ public class LeaveCalendarController {
 
     @GetMapping
     public ApiResponse<List<LeaveCalendarItemDto>> getCalendar(
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate
+            @RequestParam("startDate") LocalDate startDate,
+            @RequestParam("endDate") LocalDate endDate
     ) {
         return ApiResponse.success(
                 leaveRequestService.getCalendar(startDate, endDate),

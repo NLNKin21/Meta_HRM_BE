@@ -1,6 +1,5 @@
 package com.metahrms.employee_management.service.task;
 
-
 import com.metahrms.employee_management.dto.response.task.task.TaskResponse;
 import com.metahrms.employee_management.dto.response.task.taskstatus.TaskStatsResponse;
 import com.metahrms.employee_management.dto.response.task.taskstatus.TaskStatsResponse.DepartmentTaskStats;
@@ -13,6 +12,7 @@ import com.metahrms.employee_management.repository.Task.TaskStatusRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,64 +30,78 @@ public class TaskStatsService {
     private final DepartmentRepository departmentRepository;
     private final TaskMapper taskMapper;
 
-    /**
-     * Lấy thống kê tổng quan cho Dashboard
-     */
+    private static final int MONTHS_PERIOD = 6;
+
+    // ✅ Trả LocalDate - nhất quán với Repository
+    private LocalDate getSixMonthsAgo() {
+        return LocalDate.now().minusMonths(MONTHS_PERIOD);
+    }
+
+    // ==================== DASHBOARD STATS (toàn hệ thống) ====================
+
     @Transactional(readOnly = true)
     public TaskStatsResponse getDashboardStats(Integer userId, Integer departmentId) {
-        log.info("Getting dashboard stats for user: {}, department: {}", userId, departmentId);
+        log.info("Getting dashboard stats - userId: {}, deptId: {}", userId, departmentId);
 
-        // Total counts
-        long totalTasks = taskRepository.count();
-        long overdueTasks = taskRepository.findOverdueTasks(LocalDate.now()).size();
+        // ✅ Nếu có departmentId → trả stats riêng của dept đó
+        if (departmentId != null) {
+            return getStatsByDepartment(departmentId);
+        }
 
-        // Get completed statuses
+        LocalDate sixMonthsAgo = getSixMonthsAgo();
+
+        // ✅ Dùng startDate (LocalDate) để filter
+        long totalTasks = taskRepository.findAll().stream()
+            .filter(t -> !t.getIsDeleted())
+            .filter(t -> t.getStartDate() != null && !t.getStartDate().isBefore(sixMonthsAgo))
+            .count();
+
+        long overdueTasks = taskRepository.findOverdueTasks(LocalDate.now()).stream()
+            .filter(t -> t.getStartDate() != null && !t.getStartDate().isBefore(sixMonthsAgo))
+            .count();
+
         List<TaskStatus> completedStatuses = taskStatusRepository.findCompletedStatuses();
         Set<Integer> completedStatusIds = completedStatuses.stream()
             .map(TaskStatus::getId)
             .collect(Collectors.toSet());
 
-        // Active vs Completed
         long completedTasks = 0;
         long activeTasks = 0;
-        
+
         List<TaskStatus> allStatuses = taskStatusRepository.findAllActiveOrderByIndex();
         Map<String, Long> tasksByStatus = new LinkedHashMap<>();
-        
+
         for (TaskStatus status : allStatuses) {
-            long count = taskRepository.findByStatusId(status.getId()).size();
+            long count = taskRepository.findByStatusId(status.getId()).stream()
+                .filter(t -> !t.getIsDeleted())
+                .filter(t -> t.getStartDate() != null && !t.getStartDate().isBefore(sixMonthsAgo))
+                .count();
             tasksByStatus.put(status.getStatusName(), count);
-            
-            if (completedStatusIds.contains(status.getId())) {
-                completedTasks += count;
-            } else {
-                activeTasks += count;
-            }
+            if (completedStatusIds.contains(status.getId())) completedTasks += count;
+            else activeTasks += count;
         }
 
-        // Tasks by priority
         Map<String, Long> tasksByPriority = new LinkedHashMap<>();
-        tasksByPriority.put("URGENT", countTasksByPriority("URGENT"));
-        tasksByPriority.put("HIGH", countTasksByPriority("HIGH"));
-        tasksByPriority.put("MEDIUM", countTasksByPriority("MEDIUM"));
-        tasksByPriority.put("LOW", countTasksByPriority("LOW"));
+        tasksByPriority.put("URGENT", countTasksByPriorityInPeriod("URGENT", sixMonthsAgo));
+        tasksByPriority.put("HIGH",   countTasksByPriorityInPeriod("HIGH",   sixMonthsAgo));
+        tasksByPriority.put("MEDIUM", countTasksByPriorityInPeriod("MEDIUM", sixMonthsAgo));
+        tasksByPriority.put("LOW",    countTasksByPriorityInPeriod("LOW",    sixMonthsAgo));
 
-        // Tasks by department
-        List<DepartmentTaskStats> tasksByDepartment = getDepartmentStats();
+        List<DepartmentTaskStats> tasksByDepartment = getDepartmentStats(sixMonthsAgo);
 
-        // Upcoming tasks (next 7 days)
         List<TaskResponse> upcomingTasks = taskRepository
             .findTasksDueBetween(LocalDate.now(), LocalDate.now().plusDays(7))
             .stream()
+            .filter(t -> t.getStartDate() != null && !t.getStartDate().isBefore(sixMonthsAgo))
             .limit(10)
             .map(taskMapper::toTaskResponse)
             .collect(Collectors.toList());
 
-        // User's urgent tasks
         List<TaskResponse> myUrgentTasks = new ArrayList<>();
         if (userId != null) {
             myUrgentTasks = taskRepository.findUrgentTasksByUser(userId)
                 .stream()
+                .filter(t -> t.getStartDate() != null && !t.getStartDate().isBefore(sixMonthsAgo))
                 .limit(5)
                 .map(taskMapper::toTaskResponse)
                 .collect(Collectors.toList());
@@ -106,38 +120,45 @@ public class TaskStatsService {
             .build();
     }
 
-    /**
-     * Lấy thống kê theo department
-     */
+    // ==================== DEPARTMENT STATS ====================
+
     @Transactional(readOnly = true)
     public TaskStatsResponse getStatsByDepartment(Integer departmentId) {
-        log.info("Getting stats for department: {}", departmentId);
+        log.info("Getting stats for department: {} (last {} months)", departmentId, MONTHS_PERIOD);
 
-        long totalTasks = taskRepository.countByDepartmentId(departmentId);
-        long overdueTasks = taskRepository.countLateTasksByDepartment(departmentId);
+        // ✅ LocalDate - nhất quán
+        LocalDate sixMonthsAgo = getSixMonthsAgo();
 
-        // Get statuses for this department
+        // ✅ Dùng query mới - lọc 6 tháng + chưa xóa
+        long totalTasks     = taskRepository.countByDepartmentIdInPeriod(departmentId, sixMonthsAgo);
+        long activeTasks    = taskRepository.countActiveByDepartmentInPeriod(departmentId, sixMonthsAgo);
+        long completedTasks = taskRepository.countCompletedByDepartmentInPeriod(departmentId, sixMonthsAgo);
+        long overdueTasks   = taskRepository.countOverdueByDepartmentInPeriod(departmentId, sixMonthsAgo);
+
+        log.info("Dept {} ({}m) - total:{}, active:{}, completed:{}, overdue:{}",
+            departmentId, MONTHS_PERIOD, totalTasks, activeTasks, completedTasks, overdueTasks);
+
+        // Thống kê theo từng status - lọc 6 tháng
         List<TaskStatus> statuses = taskStatusRepository.findByDepartmentIdOrCommon(departmentId);
-        
         Map<String, Long> tasksByStatus = new LinkedHashMap<>();
-        long completedTasks = 0;
-        long activeTasks = 0;
 
         for (TaskStatus status : statuses) {
-            long count = taskRepository.countByDepartmentAndStatus(departmentId, status.getId());
+            long count = taskRepository.countByDepartmentAndStatusInPeriod(
+                departmentId, status.getId(), sixMonthsAgo
+            );
             tasksByStatus.put(status.getStatusName(), count);
-            
-            if (status.getIsCompleted()) {
-                completedTasks += count;
-            } else {
-                activeTasks += count;
-            }
         }
 
-        // Upcoming tasks
+        // ✅ Upcoming tasks - JPQL + Pageable thay native SQL
         List<TaskResponse> upcomingTasks = taskRepository
-            .findTop10UpcomingTasksForDepartment(departmentId, LocalDate.now(), LocalDate.now().plusDays(7))
+            .findTop10UpcomingTasksForDepartment(
+                departmentId,
+                LocalDate.now(),
+                LocalDate.now().plusDays(7),
+                PageRequest.of(0, 10)
+            )
             .stream()
+            .filter(t -> t.getStartDate() != null && !t.getStartDate().isBefore(sixMonthsAgo))
             .map(taskMapper::toTaskResponse)
             .collect(Collectors.toList());
 
@@ -151,39 +172,39 @@ public class TaskStatsService {
             .build();
     }
 
-    // ========== HELPER METHODS ==========
+    // ==================== HELPER METHODS ====================
 
-    private long countTasksByPriority(String priority) {
-        // Implement based on your needs - simple example
+    // ✅ Dùng startDate (LocalDate) - không cần convert
+    private long countTasksByPriorityInPeriod(String priority, LocalDate fromDate) {
         return taskRepository.findAll().stream()
-            .filter(t -> t.getPriority() != null && t.getPriority().name().equals(priority))
             .filter(t -> !t.getIsDeleted())
+            .filter(t -> t.getPriority() != null && t.getPriority().name().equals(priority))
+            .filter(t -> t.getStartDate() != null && !t.getStartDate().isBefore(fromDate))
             .count();
     }
 
-    private List<DepartmentTaskStats> getDepartmentStats() {
+    // ✅ Param là LocalDate - nhất quán với Repository
+    private List<DepartmentTaskStats> getDepartmentStats(LocalDate fromDate) {
         List<DepartmentTaskStats> stats = new ArrayList<>();
         List<Department> departments = departmentRepository.findAll();
 
         for (Department dept : departments) {
-            long total = taskRepository.countByDepartmentId(dept.getId());
-            
-            // Count active tasks
-            long active = taskRepository.findByDepartmentId(dept.getId()).stream()
-                .filter(t -> !t.getStatus().getIsCompleted() && !t.getIsDeleted())
-                .count();
+            try {
+                long total     = taskRepository.countByDepartmentIdInPeriod(dept.getId(), fromDate);
+                long active    = taskRepository.countActiveByDepartmentInPeriod(dept.getId(), fromDate);
+                long completed = taskRepository.countCompletedByDepartmentInPeriod(dept.getId(), fromDate);
 
-            DepartmentTaskStats deptStats = DepartmentTaskStats.builder()
-                .departmentId(dept.getId())
-                .departmentName(dept.getDeptName())
-                .totalTasks(total)
-                .activeTasks(active)
-                .completedTasks(total - active)
-                .build();
-
-            stats.add(deptStats);
+                stats.add(DepartmentTaskStats.builder()
+                    .departmentId(dept.getId())
+                    .departmentName(dept.getDeptName())
+                    .totalTasks(total)
+                    .activeTasks(active)
+                    .completedTasks(completed)
+                    .build());
+            } catch (Exception e) {
+                log.warn("Failed to get stats for dept {}: {}", dept.getId(), e.getMessage());
+            }
         }
-
         return stats;
     }
 }

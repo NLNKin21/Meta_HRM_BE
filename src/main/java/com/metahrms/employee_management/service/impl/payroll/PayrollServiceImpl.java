@@ -832,6 +832,15 @@ public class PayrollServiceImpl implements PayrollService {
 
         List<Payslip> payslips = payslipRepository.findByMonthAndYearAndIsDeletedFalse(month, year);
 
+        if (payslips.isEmpty()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(
+                "{\"success\":false,\"message\":\"Chưa có dữ liệu lương tháng " + month + "/" + year + "\"}"
+            );
+            return;
+        }
+
         String fileName = String.format("payroll_%d_%02d.xlsx", year, month);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
@@ -915,6 +924,8 @@ public class PayrollServiceImpl implements PayrollService {
             }
 
             workbook.write(response.getOutputStream());
+        } catch (Exception e) {
+            log.error("[PAYROLL] Export Excel error: {}", e.getMessage(), e);
         }
     }
 
@@ -926,11 +937,15 @@ public class PayrollServiceImpl implements PayrollService {
     public void exportTechcombank(Integer month, Integer year, HttpServletResponse response) throws IOException {
         log.info("[PAYROLL] Exporting Techcombank format: {}/{}", month, year);
 
-        List<Payslip> payslips = payslipRepository
-                .findByMonthAndYearAndStatusAndIsDeletedFalse(month, year, "APPROVED");
-
+        List<Payslip> payslips = payslipRepository.findByMonthAndYearAndStatusInAndIsDeletedFalse(
+                month,
+                year,
+                List.of("APPROVED", "PAID")
+            );
         if (payslips.isEmpty()) {
-            throw new IllegalStateException("No APPROVED payslips found for " + month + "/" + year);
+            throw new IllegalStateException(
+                "Không có phiếu lương APPROVED hoặc PAID cho tháng " + month + "/" + year
+            );
         }
 
         String fileName = String.format("TCB_payroll_%d_%02d.xlsx", year, month);
@@ -939,12 +954,10 @@ public class PayrollServiceImpl implements PayrollService {
 
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Lệnh chuyển tiền");
-
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle dataStyle   = createDataStyle(workbook);
             CellStyle moneyStyle  = createMoneyStyle(workbook);
 
-            // Techcombank format header
             int rowNum = 0;
             Row headerRow = sheet.createRow(rowNum++);
             String[] tcbHeaders = {
@@ -990,7 +1003,6 @@ public class PayrollServiceImpl implements PayrollService {
                 totalAmount = totalAmount.add(p.getNetSalary());
             }
 
-            // Total row
             Row totalRow = sheet.createRow(rowNum);
             totalRow.createCell(2).setCellValue("TỔNG CỘNG");
             setMoneyCell(totalRow, 3, totalAmount, moneyStyle);
@@ -1000,11 +1012,13 @@ public class PayrollServiceImpl implements PayrollService {
             }
 
             workbook.write(response.getOutputStream());
+        } catch (Exception e) {
+            log.error("[PAYROLL-TCB] Export error: {}", e.getMessage(), e);
         }
 
         log.info("[PAYROLL-TCB] Exported {} records", payslips.size());
     }
-
+    
     // ============================================================
     // HELPER METHODS
     // ============================================================

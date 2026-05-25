@@ -73,4 +73,10 @@ public interface PayslipRepository extends JpaRepository<Payslip, Integer> {
     java.math.BigDecimal sumCompanyCostByMonthAndYear(
         @Param("month") Integer month, @Param("year") Integer year
     );
+
+    List<Payslip> findByMonthAndYearAndStatusInAndIsDeletedFalse(
+        Integer month,
+        Integer year,
+        List<String> statuses
+    );
 }

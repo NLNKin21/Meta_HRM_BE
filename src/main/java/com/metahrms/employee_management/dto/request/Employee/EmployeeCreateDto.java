@@ -44,7 +44,7 @@ public class EmployeeCreateDto {
     Gender gender;
 
     @NotNull(message = "Date of birth is required")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Schema(description = "Date of birth", example = "28/11/2000", type = "string", pattern = "dd/MM/yyyy", required = true)
     LocalDate dob;
 
@@ -56,7 +56,7 @@ public class EmployeeCreateDto {
     String address;
 
     @NotNull(message = "Hire date is required")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Schema(description = "Hire date", example = "01/01/2025", type = "string", pattern = "dd/MM/yyyy", required = true)
     LocalDate hireDate;
 

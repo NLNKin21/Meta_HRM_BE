@@ -62,23 +62,23 @@ public class LeaveBalanceController {
     }
 
     @PostMapping("/sync")
-    public ApiResponse<String> syncBalancesForYear(@RequestParam Integer year) {
+    public ApiResponse<String> syncBalancesForYear(@RequestParam("year") Integer year) {
         leaveBalanceService.syncBalancesForYear(year);
         return ApiResponse.success("OK", "Đồng bộ balance cho toàn bộ nhân viên thành công");
     }
 
     @PostMapping("/sync/leave-type/{leaveTypeId}")
     public ApiResponse<String> syncBalancesForLeaveType(
-            @PathVariable Long leaveTypeId,
-            @RequestParam Integer year) {
+            @PathVariable("leaveTypeId") Long leaveTypeId,
+            @RequestParam("year") Integer year) {
         leaveBalanceService.syncBalancesForLeaveType(leaveTypeId, year);
         return ApiResponse.success("OK", "Đồng bộ balance theo loại nghỉ thành công");
     }
 
     @PostMapping("/sync/employee/{employeeId}")
     public ApiResponse<String> initBalancesForEmployee(
-            @PathVariable Integer employeeId,
-            @RequestParam Integer year) {
+            @PathVariable("employeeId") Integer employeeId,
+            @RequestParam("year") Integer year) {
         leaveBalanceService.initBalancesForEmployee(employeeId, year);
         return ApiResponse.success("OK", "Khởi tạo balance cho nhân viên thành công");
     }

@@ -208,21 +208,56 @@ public class AdminPayrollController {
 
     @GetMapping("/export/excel")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
-    @Operation(summary = "Export Excel bảng lương")
     public void exportExcel(
             @RequestParam("month") Integer month,
             @RequestParam("year") Integer year,
-            HttpServletResponse response) throws IOException {
-        payrollService.exportPayrollExcel(month, year, response);
+            HttpServletResponse response) {
+        try {
+            payrollService.exportPayrollExcel(month, year, response);
+        } catch (Exception e) {
+            log.error("[PAYROLL] Export Excel failed: {}", e.getMessage(), e);
+            // ✅ Tự xử lý — không để Spring/GlobalExceptionHandler bắt
+            if (!response.isCommitted()) {
+                try {
+                    response.reset();
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write(
+                        "{\"success\":false,\"code\":500,\"message\":\"" +
+                        e.getMessage().replace("\"", "'") + "\"}"
+                    );
+                    response.flushBuffer();
+                } catch (IOException ioEx) {
+                    log.error("Cannot write error response", ioEx);
+                }
+            }
+        }
     }
 
     @GetMapping("/export/techcombank")
     @PreAuthorize("hasAnyRole('ADMIN')")
-    @Operation(summary = "Export file chuyển khoản Techcombank")
     public void exportTechcombank(
             @RequestParam("month") Integer month,
             @RequestParam("year") Integer year,
-            HttpServletResponse response) throws IOException {
-        payrollService.exportTechcombank(month, year, response);
+            HttpServletResponse response) {
+        try {
+            payrollService.exportTechcombank(month, year, response);
+        } catch (Exception e) {
+            log.error("[PAYROLL] Export TCB failed: {}", e.getMessage(), e);
+            if (!response.isCommitted()) {
+                try {
+                    response.reset();
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write(
+                        "{\"success\":false,\"code\":500,\"message\":\"" +
+                        e.getMessage().replace("\"", "'") + "\"}"
+                    );
+                    response.flushBuffer();
+                } catch (IOException ioEx) {
+                    log.error("Cannot write error response", ioEx);
+                }
+            }
+        }
     }
 }

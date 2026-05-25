@@ -79,6 +79,9 @@ public class TaskCommentService {
             .task(task)
             .user(author)  
             .content(request.getContent())
+            .attachmentUrl(request.getAttachmentUrl())
+            .attachmentName(request.getAttachmentName())
+            .attachmentType(request.getAttachmentType())
             .isDeleted(false)
             .build();
 

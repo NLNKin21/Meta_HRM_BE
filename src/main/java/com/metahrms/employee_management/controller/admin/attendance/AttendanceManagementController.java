@@ -169,7 +169,7 @@ public class AttendanceManagementController {
         description = "Approve an employee's attendance record. Note field is optional."
     )
     public ResponseEntity<ApiResponse<Void>> approve(
-            @PathVariable Integer attendanceId,
+            @PathVariable("attendanceId") Integer attendanceId,
             @RequestBody(required = false) ApproveAttendanceRequest request
     ) {
         Integer userId = SecurityUtils.getCurrentUserId();
@@ -202,7 +202,7 @@ public class AttendanceManagementController {
         description = "Reject an employee's attendance record. Reason is REQUIRED."
     )
     public ResponseEntity<ApiResponse<Void>> reject(
-            @PathVariable Integer attendanceId,
+            @PathVariable("attendanceId") Integer attendanceId,
             @Valid @RequestBody RejectAttendanceRequest request
     ) {
         Integer userId = SecurityUtils.getCurrentUserId();
@@ -239,7 +239,7 @@ public class AttendanceManagementController {
             """
     )
     public ResponseEntity<ApiResponse<Void>> edit(
-            @PathVariable Integer attendanceId,
+            @PathVariable("attendanceId") Integer attendanceId,
             @Valid @RequestBody EditAttendanceRequest request
     ) {
         Integer userId = SecurityUtils.getCurrentUserId();
@@ -267,7 +267,7 @@ public class AttendanceManagementController {
         description = "Get change history for an attendance record. Sorted by newest first."
     )
     public ResponseEntity<ApiResponse<List<AuditLogDTO>>> getAuditLogs(
-            @PathVariable Integer attendanceId
+            @PathVariable("attendanceId") Integer attendanceId
     ) {
         Integer userId = SecurityUtils.getCurrentUserId();
         log.info("[ADMIN-ATTENDANCE] AuditLogs: attendanceId={}", attendanceId);

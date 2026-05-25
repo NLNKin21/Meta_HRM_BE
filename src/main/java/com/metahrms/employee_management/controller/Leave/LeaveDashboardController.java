@@ -14,7 +14,7 @@ public class LeaveDashboardController {
     private final LeaveDashboardService leaveDashboardService;
 
     @GetMapping("/manager-summary/{managerId}")
-    public ApiResponse<ManagerLeaveSummaryDto> getManagerSummary(@PathVariable Integer managerId) {
+    public ApiResponse<ManagerLeaveSummaryDto> getManagerSummary(@PathVariable("managerId") Integer managerId) {
         return ApiResponse.success(
                 leaveDashboardService.getManagerSummary(managerId),
                 "Lấy thống kê đơn nghỉ của manager thành công"

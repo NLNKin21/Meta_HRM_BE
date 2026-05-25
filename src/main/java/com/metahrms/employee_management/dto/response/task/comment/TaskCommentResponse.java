@@ -41,6 +41,10 @@ public class TaskCommentResponse {
     @Schema(description = "Comment updated time", example = "20/01/2024 11:00:00")
     LocalDateTime updatedAt;
 
+    String attachmentUrl;
+    String attachmentName;
+    String attachmentType;
+
     @Schema(description = "Can current user edit this comment?", example = "true")
     Boolean canEdit;
 
@@ -60,6 +64,9 @@ public class TaskCommentResponse {
         private String content;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private String attachmentUrl;
+        private String attachmentName;
+        private String attachmentType;
         private Boolean canEdit;
         private Boolean canDelete;
 
@@ -71,6 +78,9 @@ public class TaskCommentResponse {
         public Builder content(String content) { this.content = content; return this; }
         public Builder createdAt(LocalDateTime createdAt) { this.createdAt = createdAt; return this; }
         public Builder updatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; return this; }
+        public Builder attachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; return this; }
+        public Builder attachmentName(String attachmentName) { this.attachmentName = attachmentName; return this; }
+        public Builder attachmentType(String attachmentType) { this.attachmentType = attachmentType; return this; }
         public Builder canEdit(Boolean canEdit) { this.canEdit = canEdit; return this; }
         public Builder canDelete(Boolean canDelete) { this.canDelete = canDelete; return this; }
 
@@ -84,6 +94,9 @@ public class TaskCommentResponse {
             response.content = this.content;
             response.createdAt = this.createdAt;
             response.updatedAt = this.updatedAt;
+            response.attachmentUrl = this.attachmentUrl;
+            response.attachmentName = this.attachmentName;
+            response.attachmentType = this.attachmentType;
             response.canEdit = this.canEdit;
             response.canDelete = this.canDelete;
             return response;
