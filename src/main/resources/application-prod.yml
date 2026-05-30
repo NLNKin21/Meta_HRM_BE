@@ -6,8 +6,8 @@
 # ==========================================
 spring:
   datasource:
-    # Railway tự inject JDBC_URL khi link MySQL service
-    url: ${JDBC_URL}
+    # Railway inject các biến này tự động từ MySQL service
+    url: jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
     username: ${MYSQLUSER}
     password: ${MYSQLPASSWORD}
 
