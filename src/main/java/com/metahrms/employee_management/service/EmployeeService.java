@@ -231,6 +231,7 @@ public class EmployeeService {
                 .endDate(contractData.getEndDate())
                 .fileUrl(fileUrl)
                 .fileKey(fileKey)
+                .previewable(false)
                 .status(contractData.getStatus() != null
                     ? contractData.getStatus()
                     : ContractStatus.ACTIVE)

@@ -27,7 +27,6 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -35,16 +34,17 @@ import java.util.Map;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = { 
+    private final String[] PUBLIC_ENDPOINTS = {
         "/auth/login",
         "/auth/logout",
         "/auth/forgot-password",
         "/api/auth/login",
         "/api/auth/logout",
         "/api/auth/forgot-password",
-        "/public/**",       
-        "/api/public/**",   
+        "/public/**",
+        "/api/public/**",
     };
+
     private final String[] SWAGGER_ENDPOINTS = {
         "/swagger-ui/**",
         "/v3/api-docs/**",
@@ -56,14 +56,18 @@ public class SecurityConfig {
     @Value("${jwt.signerKey}")
     private String signerKey;
 
+    // Đọc allowed origins từ env variable
+    // Nếu không có thì mặc định cho phép localhost dev
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+    private String allowedOriginsStr;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-
         httpSecurity.authorizeHttpRequests(request -> request
                 .requestMatchers(SWAGGER_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers("/public/**").permitAll()    
-                .requestMatchers("/api/public/**").permitAll() 
+                .requestMatchers("/public/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/locations/**").authenticated()
                 .anyRequest().authenticated()
@@ -74,9 +78,7 @@ public class SecurityConfig {
         );
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
-
         httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
-
         httpSecurity.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
@@ -93,26 +95,15 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // ⭐ THAY ĐỔI: Cho phép tất cả origins trong development
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        
-        // Hoặc nếu muốn cụ thể:
-        // configuration.setAllowedOrigins(List.of(
-        //     "http://localhost:5173",     // Web
-        //     "http://34.126.173.70",      // Production
-        //     "http://192.168.0.103:8081"  // React Native (Expo)
-        // ));
-        
+
+        // Đọc từ env variable, tách bằng dấu phẩy
+        List<String> origins = List.of(allowedOriginsStr.split(","));
+        configuration.setAllowedOrigins(origins);
+
         configuration.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"
         ));
 
-        // Hoặc đơn giản hơn - cho phép tất cả headers:
-        configuration.setAllowedHeaders(List.of("*"));
-        
-        configuration.setAllowCredentials(true);
-        
         configuration.setAllowedHeaders(List.of(
             "Authorization",
             "Content-Type",
@@ -120,13 +111,13 @@ public class SecurityConfig {
             "X-Requested-With",
             "Accept"
         ));
-        
+
         configuration.setExposedHeaders(List.of(
             "Authorization",
             "Content-Type"
         ));
-        
-        // ✅ NÊN THÊM: Cache preflight request
+
+        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -138,16 +129,9 @@ public class SecurityConfig {
     public Filter jwtAuthenticationFilter() {
         return (request, response, chain) -> {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            System.out.println("🔍 Processing: " + httpRequest.getMethod() + " " + httpRequest.getRequestURI());
             String requestPath = httpRequest.getRequestURI();
 
-            // Priority 1: Get token from Authorization header (for mobile)
             String token = getTokenFromAuthorizationHeader(httpRequest);
-
-            // // First, try to get token from cookie
-            // String token = getTokenFromCookie(httpRequest);
-
-            // Priority 2: Get token from cookie (for web)
             if (token == null) {
                 token = getTokenFromCookie(httpRequest);
             }
@@ -156,53 +140,40 @@ public class SecurityConfig {
                 try {
                     Jwt jwt = jwtDecoder().decode(token);
 
-                    String id = jwt.getClaimAsString("id");
+                    String id    = jwt.getClaimAsString("id");
                     String username = jwt.getClaimAsString("username");
-                    String email = jwt.getClaimAsString("email");
-                    String role = jwt.getClaimAsString("role");
-
-                    // ⭐ THÊM: Log để debug
-                    System.out.println("✅ Authenticated user: " + username + " (ID: " + id + ")");
+                    String email    = jwt.getClaimAsString("email");
+                    String role     = jwt.getClaimAsString("role");
 
                     Map<String, Object> userInfo = Map.of(
-                            "id", id,
-                            "username", username,
-                            "email", email,
-                            "role", role
+                        "id", id,
+                        "username", username,
+                        "email", email,
+                        "role", role
                     );
-
                     request.setAttribute("user", userInfo);
-                    
+
                     String springRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
-
                     UserDetails userDetails = User.builder()
-                            .username(username)
-                            .password("")
-                            .authorities(springRole)
-                            .build();
+                        .username(username)
+                        .password("")
+                        .authorities(springRole)
+                        .build();
 
-                    UsernamePasswordAuthenticationToken authToken = 
+                    UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                            userDetails, 
-                            null, 
-                            userDetails.getAuthorities()
+                            userDetails, null, userDetails.getAuthorities()
                         );
-
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
                 } catch (Exception e) {
-                    // ⭐ SỬA: Log chi tiết hơn
                     System.err.println("❌ Invalid JWT: " + e.getMessage());
-                    e.printStackTrace();
                 }
-            } else {
-                System.out.println("⚠️ No token found in request");
             }
 
             chain.doFilter(request, response);
         };
     }
-
 
     private String getTokenFromAuthorizationHeader(HttpServletRequest request) {
         String authorizationHeader = request.getHeader("Authorization");

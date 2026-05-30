@@ -49,8 +49,8 @@ public class Contract extends BaseEntity {
     @Column(name = "file_format")
     private String fileFormat;
 
-    @Column(name = "previewable")
-    private Boolean previewable;
+    @Column(name = "previewable", nullable = false) 
+    private Boolean previewable = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -132,7 +132,7 @@ public class Contract extends BaseEntity {
             contract.fileKey = this.fileKey;  // ✅ Set fileKey
             contract.previewUrl = this.previewUrl;
             contract.fileFormat = this.fileFormat;
-            contract.previewable = this.previewable;
+            contract.previewable = this.previewable != null ? this.previewable : Boolean.FALSE;
             contract.status = this.status != null ? this.status : ContractStatus.ACTIVE;
             return contract;
         }
