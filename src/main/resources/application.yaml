@@ -1,5 +1,6 @@
 # ==========================================
-# APPLICATION CONFIGURATION
+# APPLICATION CONFIGURATION (BASE)
+# Các giá trị nhạy cảm đọc từ environment variables
 # ==========================================
 spring:
   application:
@@ -7,13 +8,13 @@ spring:
 
   # -------------------- PROFILES --------------------
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   # -------------------- DATABASE --------------------
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/metahrm?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    username: root
-    password: 123456
+    url: ${DATABASE_URL:jdbc:mysql://127.0.0.1:3306/metahrm?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DATABASE_USERNAME:root}
+    password: ${DATABASE_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       pool-name: HikariCP
@@ -23,7 +24,7 @@ spring:
       connection-timeout: 20000
       max-lifetime: 1800000
 
-  # -------------------- migration --------------------
+  # -------------------- FLYWAY --------------------
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -33,16 +34,16 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
         jdbc:
           time_zone: Asia/Ho_Chi_Minh
     open-in-view: false
 
-   # -------------------- MAIL --------------------
+  # -------------------- MAIL --------------------
   mail:
     host: smtp.gmail.com
     port: 587
@@ -59,6 +60,7 @@ spring:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
+
   # -------------------- FILE UPLOAD --------------------
   servlet:
     multipart:
@@ -67,7 +69,7 @@ spring:
 
   # -------------------- THYMELEAF --------------------
   thymeleaf:
-    cache: false
+    cache: true
     prefix: classpath:/templates/
     suffix: .html
 
@@ -75,7 +77,7 @@ spring:
 # SERVER CONFIGURATION
 # ==========================================
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api
   error:
@@ -86,112 +88,91 @@ server:
 # JWT CONFIGURATION
 # ==========================================
 jwt:
-  signerKey: myVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong2024!@#$%^&*
-  expiration: 86400000 # 24 hours in milliseconds
-  refresh-expiration: 604800000 # 7 days
+  signerKey: ${JWT_SECRET:myVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong2024!@#$%^&*}
+  expiration: 86400000
+  refresh-expiration: 604800000
 
 # ==========================================
 # CLOUDINARY CONFIGURATION
 # ==========================================
 cloudinary:
-  cloud-name: dyjfpbj5e
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:dyjfpbj5e}
   api-key: ${CLOUDINARY_API_KEY:727988751731697}
   api-secret: ${CLOUDINARY_API_SECRET:90vVKuoLKhSDd_73ptX62A139Cc}
-  folder: MetaHRM                           # Thư mục lưu file trên Cloudinary
-  max-file-size: 10485760          
-# File upload limits
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB                # 10MB
+  folder: MetaHRM
+  max-file-size: 10485760
 
-
-# ============================================
-# FACE RECOGNITION SERVICE CONFIGURATION
-# ============================================
+# ==========================================
+# FACE RECOGNITION SERVICE
+# ==========================================
 face-recognition:
   service:
-    base-url: http://localhost:8000
-    enabled: true
-    
+    base-url: ${FACE_AI_URL:http://localhost:8000}
+    enabled: ${FACE_AI_ENABLED:false}   # ← mặc định TẮT, bật lại khi có service thật
   endpoints:
     enroll: /api/face/enroll
     verify: /api/face/verify
     health: /health
-    
   timeouts:
-    connection: 5000      # 5 seconds
-    read: 30000          # 30 seconds (AI processing takes time)
-    
+    connection: 5000
+    read: 30000
   retry:
     max-attempts: 3
-    delay: 1000          # 1 second between retries
-    
+    delay: 1000
   thresholds:
-    verification: 80.0   # Confidence threshold
-    min-quality: 0.7     # Minimum image quality
-    
+    verification: 80.0
+    min-quality: 0.7
   image:
-    max-size: 10485760   # 10MB
+    max-size: 10485760
     compress-quality: 0.9
-    target-width: 800    # Resize trước khi gửi để tối ưu
-    
-  # Circuit breaker configuration
+    target-width: 800
   circuit-breaker:
     enabled: true
-    failure-rate-threshold: 50      # Open circuit if 50% fail
-    wait-duration-in-open-state: 10000  # 10 seconds
+    failure-rate-threshold: 50
+    wait-duration-in-open-state: 10000
     sliding-window-size: 10
 
-
 # ==========================================
-# SWAGGER/OPENAPI CONFIGURATION
+# SWAGGER — tắt trên production
 # ==========================================
 springdoc:
   api-docs:
     path: /v3/api-docs
-    enabled: true
+    enabled: ${SWAGGER_ENABLED:true}
   swagger-ui:
     path: /swagger-ui.html
-    enabled: true
+    enabled: ${SWAGGER_ENABLED:true}
     tags-sorter: alpha
     operations-sorter: alpha
 
 # ==========================================
-# ACTUATOR CONFIGURATION
+# ACTUATOR
 # ==========================================
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info
   endpoint:
     health:
       show-details: when_authorized
 
 # ==========================================
-# LOGGING CONFIGURATION
+# LOGGING
 # ==========================================
 logging:
   level:
-    root: INFO
-    com.metahrms.employeemanagement: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    root: WARN
+    com.metahrms.employeemanagement: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/application.log
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 # ==========================================
-# APP CUSTOM CONFIGURATION
+# APP CUSTOM
 # ==========================================
 app:
   upload:
     leave-dir: uploads/leave
-
   mail:
     from: ${MAIL_USERNAME:nlnhttl21@gmail.com}
     from-name: MetaHRM

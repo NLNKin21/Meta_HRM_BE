@@ -6,7 +6,7 @@ plugins {
 
 group = "com.metahrms"
 version = "0.0.1-SNAPSHOT"
-description = " Employee Management System"
+description = "Employee Management System"
 
 java {
 	toolchain {
@@ -44,33 +44,38 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	implementation("org.flywaydb:flyway-core")
-	implementation ("org.flywaydb:flyway-mysql")
-		// Cloudinary
+	implementation("org.flywaydb:flyway-mysql")
+
+	// Cloudinary
 	implementation("com.cloudinary:cloudinary-http44:1.36.0")
 
-	// export excel
+	// Export Excel
 	implementation("org.apache.poi:poi:5.2.5")
-    implementation("org.apache.poi:poi-ooxml:5.2.5")
-	
+	implementation("org.apache.poi:poi-ooxml:5.2.5")
 
-    // Apache HttpClient
-    implementation("org.apache.httpcomponents.client5:httpclient5")
-	// WebClient (reactive) - thay RestTemplate
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
+	// Apache HttpClient
+	implementation("org.apache.httpcomponents.client5:httpclient5")
+
+	// WebFlux (dùng WebClient)
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
+
 	// Image processing
-    implementation("org.imgscalr:imgscalr-lib:4.2")
-    // Apache Commons IO
-    implementation("commons-io:commons-io:2.16.1")
-    // Resilience4j (Circuit Breaker)
-    implementation("io.github.resilience4j:resilience4j-spring-boot2:2.1.0")
-    // AOP
-    implementation("org.springframework.boot:spring-boot-starter-aop")
+	implementation("org.imgscalr:imgscalr-lib:4.2")
+
+	// Apache Commons IO
+	implementation("commons-io:commons-io:2.16.1")
+
+	// ✅ Resilience4j — dùng spring-boot3 thay vì spring-boot2
+	implementation("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
+
+	// AOP (bắt buộc phải có khi dùng Resilience4j)
+	implementation("org.springframework.boot:spring-boot-starter-aop")
 }
 
 configurations.configureEach {
-    resolutionStrategy {
-        force("commons-io:commons-io:2.16.1")
-    }
+	resolutionStrategy {
+		force("commons-io:commons-io:2.16.1")
+	}
 }
 
 tasks.withType<JavaCompile> {

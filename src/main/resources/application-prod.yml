@@ -1,22 +1,47 @@
 # ==========================================
 # PRODUCTION PROFILE
+# Dùng trên Railway: SPRING_PROFILES_ACTIVE=prod
+# TẤT CẢ giá trị nhạy cảm đọc từ env vars Railway
+# KHÔNG hardcode bất kỳ secret nào ở đây
 # ==========================================
 spring:
   datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
+    # Railway tự inject JDBC_URL khi link MySQL service
+    url: ${JDBC_URL}
+    username: ${MYSQLUSER}
+    password: ${MYSQLPASSWORD}
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false   # prod không cần baseline
 
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
 
   devtools:
     restart:
       enabled: false
 
+  thymeleaf:
+    cache: true
+
+face-recognition:
+  service:
+    enabled: false   # Tắt Face AI trên Railway free tier (không đủ RAM)
+
+springdoc:
+  api-docs:
+    enabled: false   # Tắt Swagger trên production
+  swagger-ui:
+    enabled: false
+
 logging:
   level:
     root: WARN
     com.metahrms.employeemanagement: INFO
+    org.springframework.security: WARN

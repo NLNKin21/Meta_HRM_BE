@@ -1,5 +1,6 @@
 # ==========================================
 # DEVELOPMENT PROFILE
+# Dùng khi chạy local: -Dspring.profiles.active=dev
 # ==========================================
 spring:
   datasource:
@@ -11,6 +12,9 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
   devtools:
     restart:
@@ -18,7 +22,25 @@ spring:
     livereload:
       enabled: true
 
+  thymeleaf:
+    cache: false
+
+face-recognition:
+  service:
+    enabled: false   # Tắt Face AI khi dev local (không cần chạy Python service)
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 logging:
   level:
+    root: INFO
     com.metahrms.employeemanagement: DEBUG
     org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  file:
+    name: logs/application-dev.log
