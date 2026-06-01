@@ -32,7 +32,8 @@ spring:
 
 face-recognition:
   service:
-    enabled: false   # Tắt Face AI trên Railway free tier (không đủ RAM)
+    enabled: ${FACE_AI_ENABLED:false}
+    base-url: ${FACE_AI_URL:http://localhost:8000}
 
 springdoc:
   api-docs:
