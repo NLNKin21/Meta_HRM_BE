@@ -319,4 +319,38 @@ public class EmployeeController {
                 .message("Employee deleted successfully")
                 .build();
     }
+
+    /**
+     * GET /admin/employees/stats
+     * Thống kê nhân viên cho HR Dashboard
+     */
+    @Operation(summary = "Get employee statistics for dashboard")
+    @GetMapping("/admin/stats")
+    public ApiResponse<Map<String, Object>> getEmployeeStats() {
+    
+        log.info("GET /employees/admin/stats");
+    
+        // Tổng nhân viên active
+        long totalActive = employeeRepository.countByStatusAndIsDeletedFalse(EmployeeStatus.ACTIVE);
+    
+        // Tổng tất cả (không bị xóa)
+        long totalAll = employeeRepository.countByIsDeletedFalse();
+    
+        // Nhân viên mới trong tháng này
+        LocalDate firstDayOfMonth = LocalDate.now().withDayOfMonth(1);
+        long newThisMonth = employeeRepository
+                .countByHireDateGreaterThanEqualAndIsDeletedFalse(firstDayOfMonth);
+    
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalActive", totalActive);
+        stats.put("totalAll", totalAll);
+        stats.put("newThisMonth", newThisMonth);
+    
+        return ApiResponse.<Map<String, Object>>builder()
+                .code(200)
+                .status("success")
+                .message("Get employee stats successfully")
+                .data(stats)
+                .build();
+    }
 }

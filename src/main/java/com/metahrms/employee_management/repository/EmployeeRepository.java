@@ -251,4 +251,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>, Jp
             @Param("contractStatuses") List<ContractStatus> contractStatuses,
             @Param("today") LocalDate today
     );
+
+    long countByStatusAndIsDeletedFalse(EmployeeStatus status);
+ 
+    long countByIsDeletedFalse();
+    
+    long countByHireDateGreaterThanEqualAndIsDeletedFalse(LocalDate hireDate);
 }

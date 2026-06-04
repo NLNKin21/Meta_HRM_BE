@@ -285,4 +285,37 @@ public class ContractController {
             .data(employees)
             .build();
     }
+
+    /**
+     * GET /admin/contracts/expiring
+     * Lấy danh sách hợp đồng hết hạn trong 60 ngày tới
+     * Dùng cho HR Dashboard
+     */
+    @Operation(summary = "Get expiring contracts for dashboard")
+    @GetMapping("/admin/expiring")
+    public ApiResponse<List<ContractResponse>> getExpiringContracts(
+            @RequestParam(name = "days", required = false, defaultValue = "60") Integer days) {
+    
+        log.info("GET /contracts/admin/expiring - within {} days", days);
+    
+        LocalDate today = LocalDate.now();
+        LocalDate deadline = today.plusDays(days);
+    
+        ContractFilterDto filterDto = ContractFilterDto.builder()
+                .page(0)
+                .pageSize(100)
+                .status(ContractStatus.ACTIVE)
+                .endDate(deadline)
+                .startDate(today)
+                .build();
+    
+        PagedResponse<ContractResponse> result = contractService.getContracts(filterDto);
+    
+        return ApiResponse.<List<ContractResponse>>builder()
+                .code(200)
+                .status("success")
+                .message("Get expiring contracts successfully")
+                .data(result.getContent())
+                .build();
+    }
 }
