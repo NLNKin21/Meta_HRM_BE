@@ -34,10 +34,7 @@ public class DepartmentController {
 
     DepartmentService departmentService;
 
-    @Operation(
-        summary = "Get all departments",
-        description = "Retrieve a list of all departments"
-    )
+    @Operation(summary = "Get all departments", description = "Retrieve a list of all departments")
     @GetMapping()
     public ApiResponse<List<DepartmentSummaryDto>> getDepartmentSummaries() {
         List<DepartmentSummaryDto> summaries = departmentService.getDepartmentSummaries();
@@ -48,15 +45,12 @@ public class DepartmentController {
                 .build();
     }
 
-    @Operation(
-        summary = "Get department by ID",
-        description = "Retrieve a single department by its ID"
-    )
+    @Operation(summary = "Get department by ID", description = "Retrieve a single department by its ID")
     @GetMapping("/{id}")
     public ApiResponse<DepartmentResponse> getDepartmentById(
-            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable("id") Integer id) {
+            @Parameter(description = "Department ID", required = true, example = "1")
+            @PathVariable("id") Integer id) {
         DepartmentResponse department = departmentService.getDepartmentById(id);
-
         return ApiResponse.<DepartmentResponse>builder()
                 .status("success")
                 .message("Get department successfully")
@@ -64,24 +58,18 @@ public class DepartmentController {
                 .build();
     }
 
-    @Operation(
-        summary = "Get employees by department", 
-        description = "Retrieve a list of employees belonging to a specific department"
-    )
+    @Operation(summary = "Get employees by department")
     @GetMapping("/{id}/employees")
-    public ResponseEntity<ApiResponse<List<?>>> getEmployeesByDepartment(@PathVariable("id") Integer id) {
+    public ResponseEntity<ApiResponse<List<?>>> getEmployeesByDepartment(
+            @PathVariable("id") Integer id) {
         return ResponseEntity.ok(ApiResponse.<List<?>>builder()
                 .status("success")
-               .message("Get employees by department successfully")
-               .data(departmentService.getEmployeesByDepartmentId(id))
+                .message("Get employees by department successfully")
+                .data(departmentService.getEmployeesByDepartmentId(id))
                 .build());
     }
 
-
-    @Operation(
-        summary = "Create department",
-        description = "Create a new department"
-    )
+    @Operation(summary = "Create department", description = "Create a new department")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<DepartmentResponse> createDepartment(
@@ -92,7 +80,6 @@ public class DepartmentController {
             )
             @Valid @RequestBody DepartmentDto createDto) {
         DepartmentResponse department = departmentService.createDepartment(createDto);
-
         return ApiResponse.<DepartmentResponse>builder()
                 .status("success")
                 .message("Department created successfully")
@@ -100,22 +87,18 @@ public class DepartmentController {
                 .build();
     }
 
-    @Operation(
-        summary = "Update department",
-        description = "Update an existing department"
-    )
+    @Operation(summary = "Update department", description = "Update an existing department")
     @PutMapping("/{id}")
     public ApiResponse<DepartmentResponse> updateDepartment(
-            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable("id") Integer id,
+            @Parameter(description = "Department ID", required = true, example = "1")
+            @PathVariable("id") Integer id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                 description = "Department update data",
                 required = true,
                 content = @Content(schema = @Schema(implementation = DepartmentDto.class))
             )
             @Valid @RequestBody DepartmentDto updateDto) {
-
         DepartmentResponse department = departmentService.updateDepartment(id, updateDto);
-
         return ApiResponse.<DepartmentResponse>builder()
                 .status("success")
                 .message("Department updated successfully")
@@ -123,46 +106,51 @@ public class DepartmentController {
                 .build();
     }
 
-    /**
-     * Get all members in a department
-     */
     @GetMapping("/{departmentId}/members")
-    @Operation(summary = "Get department members", description = "Returns all employees in a specific department")
+    @Operation(summary = "Get department members")
     public ResponseEntity<ApiResponse<List<TeamMemberResponse>>> getDepartmentMembers(
             @Parameter(description = "Department ID", required = true)
             @PathVariable("departmentId") Integer departmentId) {
-        
         List<TeamMemberResponse> members = departmentService.getDepartmentMembers(departmentId);
         return ResponseEntity.ok(
             ApiResponse.success(members, "Retrieved department members successfully")
         );
     }
 
-    /**
-     * Get team workload (tasks count per employee)
-     */
     @GetMapping("/{departmentId}/workload")
-    @Operation(summary = "Get team workload", description = "Returns workload statistics for each team member")
+    @Operation(summary = "Get team workload")
     public ResponseEntity<ApiResponse<List<TeamWorkloadResponse>>> getTeamWorkload(
             @Parameter(description = "Department ID", required = true)
             @PathVariable("departmentId") Integer departmentId) {
-        
         List<TeamWorkloadResponse> workload = departmentService.getTeamWorkload(departmentId);
         return ResponseEntity.ok(
             ApiResponse.success(workload, "Retrieved team workload successfully")
         );
     }
 
-
+    // ✅ Endpoint toggle status mới
     @Operation(
-        summary = "Delete department",
-        description = "Delete a department"
+        summary = "Toggle department status",
+        description = "Activate or deactivate a department"
     )
+    @PatchMapping("/{id}/toggle-status")
+    public ApiResponse<DepartmentResponse> toggleDepartmentStatus(
+            @Parameter(description = "Department ID", required = true, example = "1")
+            @PathVariable("id") Integer id) {
+        DepartmentResponse department = departmentService.toggleDepartmentStatus(id);
+        return ApiResponse.<DepartmentResponse>builder()
+                .status("success")
+                .message("Department status updated successfully")
+                .data(department)
+                .build();
+    }
+
+    @Operation(summary = "Delete department", description = "Delete a department")
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteDepartment(
-            @Parameter(description = "Department ID", required = true, example = "1") @PathVariable("id") Integer id) {
+            @Parameter(description = "Department ID", required = true, example = "1")
+            @PathVariable("id") Integer id) {
         departmentService.deleteDepartment(id);
-
         return ApiResponse.<Void>builder()
                 .status("success")
                 .message("Department deleted successfully")

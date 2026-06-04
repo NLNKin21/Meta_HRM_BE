@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Schema(description = "Response object containing department details")
 public class DepartmentResponse {
-    
+
     @Schema(description = "Unique identifier of the department", example = "1")
     Integer id;
 
@@ -33,6 +33,10 @@ public class DepartmentResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     LocalDateTime createdAt;
 
+    // ✅ Thêm field isActive
+    @Schema(description = "Department active status", example = "true")
+    Boolean isActive;
+
     public static Builder builder() {
         return new Builder();
     }
@@ -44,6 +48,7 @@ public class DepartmentResponse {
         private Integer managerId;
         private Long employeeCount;
         private LocalDateTime createdAt;
+        private Boolean isActive; // ✅ Thêm
 
         public Builder id(Integer id) {
             this.id = id;
@@ -75,6 +80,12 @@ public class DepartmentResponse {
             return this;
         }
 
+        // ✅ Thêm
+        public Builder isActive(Boolean isActive) {
+            this.isActive = isActive;
+            return this;
+        }
+
         public DepartmentResponse build() {
             DepartmentResponse response = new DepartmentResponse();
             response.id = this.id;
@@ -83,6 +94,7 @@ public class DepartmentResponse {
             response.managerId = this.managerId;
             response.employeeCount = this.employeeCount;
             response.createdAt = this.createdAt;
+            response.isActive = this.isActive; // ✅ Thêm
             return response;
         }
     }

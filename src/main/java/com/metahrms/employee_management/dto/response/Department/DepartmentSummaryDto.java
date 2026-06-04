@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @AllArgsConstructor
 @Schema(description = "Summary information about a department including employee count and manager details")
 public class DepartmentSummaryDto {
+
     @Schema(description = "Unique identifier of the department", example = "1")
     private Integer id;
 
@@ -27,4 +28,8 @@ public class DepartmentSummaryDto {
     @Schema(description = "Department creation timestamp", example = "10/11/2025")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDateTime createdAt;
+
+    // ✅ Thêm field isActive
+    @Schema(description = "Department active status", example = "true")
+    private Boolean isActive;
 }

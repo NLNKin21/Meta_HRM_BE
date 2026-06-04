@@ -1,5 +1,6 @@
 package com.metahrms.employee_management.dto.request.Employee;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -63,6 +64,8 @@ public class EmployeeUpdateDto {
     @Schema(description = "Role in department", example = "STAFF")
     RoleInDepartment roleInDept;
 
+    private BigDecimal basicSalary;
+
     public static Builder builder() {
         return new Builder();
     }
@@ -77,6 +80,8 @@ public class EmployeeUpdateDto {
         private LocalDate hireDate;
         private EmployeeStatus status;
         private RoleInDepartment roleInDept;
+        private BigDecimal basicSalary;
+
 
         public Builder deptId(Integer deptId) {
             this.deptId = deptId;
@@ -123,6 +128,11 @@ public class EmployeeUpdateDto {
             return this;
         }
 
+        public Builder basicSalary(BigDecimal basicSalary) {
+            this.basicSalary = basicSalary;
+            return this;
+        }
+
         public EmployeeUpdateDto build() {
             EmployeeUpdateDto dto = new EmployeeUpdateDto();
             dto.deptId = this.deptId;
@@ -134,6 +144,7 @@ public class EmployeeUpdateDto {
             dto.hireDate = this.hireDate;
             dto.status = this.status;
             dto.roleInDept = this.roleInDept;
+            dto.basicSalary = this.basicSalary;
             return dto;
         }
     }

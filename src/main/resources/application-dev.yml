@@ -27,7 +27,8 @@ spring:
 
 face-recognition:
   service:
-    enabled: false   # Tắt Face AI khi dev local (không cần chạy Python service)
+    enabled: true
+    base-url: http://localhost:8000
 
 springdoc:
   api-docs:

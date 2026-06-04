@@ -88,4 +88,9 @@ public interface PayrollService {
      * Export file chuyển khoản Techcombank
      */
     void exportTechcombank(Integer month, Integer year, HttpServletResponse response) throws IOException;
+
+    /**
+     * Employee: xem chi tiết 1 phiếu lương của mình (có kiểm tra ownership)
+     */
+    PayslipFullDTO getMyPayslipDetail(Integer payslipId, Integer employeeId);
 }

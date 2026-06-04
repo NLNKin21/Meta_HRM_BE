@@ -6,6 +6,7 @@ import com.metahrms.employee_management.entity.Employee;
 import com.metahrms.employee_management.entity.Leave.LeaveRequest;
 import com.metahrms.employee_management.entity.Payroll.*;
 import com.metahrms.employee_management.entity.Attendance.AttendanceRecord;
+import com.metahrms.employee_management.exception.BusinessException;
 import com.metahrms.employee_management.exception.ResourceNotFoundException;
 import com.metahrms.employee_management.repository.*;
 import com.metahrms.employee_management.repository.Attendance.AttendanceRecordRepository;
@@ -1264,6 +1265,19 @@ public class PayrollServiceImpl implements PayrollService {
                 .note(d.getNote())
                 .sortOrder(d.getSortOrder())
                 .build();
+    }
+
+    @Override
+    public PayslipFullDTO getMyPayslipDetail(Integer payslipId, Integer employeeId) {
+        Payslip payslip = payslipRepository.findById(payslipId)
+            .orElseThrow(() -> new ResourceNotFoundException("Payslip not found: " + payslipId));
+        
+        // Kiểm tra ownership — chỉ được xem phiếu lương của mình
+        if (!payslip.getEmployeeId().equals(employeeId)) {
+            throw new BusinessException("Access denied: This payslip does not belong to you");
+        }
+        
+        return getPayslipDetail(payslipId);
     }
 
     // Excel helpers

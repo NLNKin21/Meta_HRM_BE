@@ -1,6 +1,7 @@
 package com.metahrms.employee_management.service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -284,6 +285,9 @@ public class EmployeeService {
         }
         if (updateDto.getStatus() != null) {
             employee.setStatus(updateDto.getStatus());
+        }
+        if (updateDto.getBasicSalary()!= null){
+            employee.setBasicSalary(updateDto.getBasicSalary());
         }
 
         if (updateDto.getRoleInDept() != null) {

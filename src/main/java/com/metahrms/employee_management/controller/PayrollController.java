@@ -61,16 +61,17 @@ public class PayrollController {
         }
     }
 
-    // @GetMapping("/payslips/{id}")
-    // @Operation(summary = "Chi tiết 1 phiếu lương của tôi")
-    // public ResponseEntity<ApiResponse<PayslipFullDTO>> getDetail(@PathVariable("id") Integer id) {
-    //     Integer employeeId = getCurrentEmployeeId();
-    //     try {
-    //         return ResponseEntity.ok(ApiResponse.success(
-    //             payrollService.getMyPayslipDetail(id, employeeId), // nên check ownership
-    //             "Payslip found"));
-    //     } catch (Exception e) {
-    //         return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-    //     }
-    // }
+    @GetMapping("/payslips/{id}")
+    @Operation(summary = "Chi tiết 1 phiếu lương của tôi")
+    public ResponseEntity<ApiResponse<PayslipFullDTO>> getDetail(
+            @PathVariable("id") Integer id) {
+        Integer employeeId = getCurrentEmployeeId();
+        try {
+            return ResponseEntity.ok(ApiResponse.success(
+                payrollService.getMyPayslipDetail(id, employeeId),
+                "Payslip found"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
 }
