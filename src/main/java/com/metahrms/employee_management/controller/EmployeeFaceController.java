@@ -156,7 +156,7 @@ public class EmployeeFaceController {
         summary = "Get all faces of an employee",
         description = "Retrieve all registered face images for a specific employee"
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<List<EmployeeFaceDTO>>> getEmployeeFaces(
             @Parameter(description = "Employee ID", required = true)
             @PathVariable("employeeId") Long employeeId,
@@ -207,7 +207,7 @@ public class EmployeeFaceController {
         summary = "Set face as primary",
         description = "Mark a specific face image as the primary one for recognition"
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<EmployeeFaceDTO>> setPrimaryFace(
             @Parameter(description = "Face ID", required = true)
             @PathVariable("id") Integer id
@@ -233,7 +233,7 @@ public class EmployeeFaceController {
         summary = "Delete face image",
         description = "Soft delete a face image. The image will be marked as inactive."
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'EMPLOYEE')")
     public ResponseEntity<ApiResponse<Void>> deleteFace(
             @Parameter(description = "Face ID", required = true)
             @PathVariable Integer id
