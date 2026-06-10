@@ -16,6 +16,7 @@ import com.metahrms.employee_management.dto.request.User.LoginDto;
 import com.metahrms.employee_management.entity.User;
 import com.metahrms.employee_management.enums.UserRole;
 import com.metahrms.employee_management.enums.UserStatus;
+import com.metahrms.employee_management.exception.BusinessException;
 import com.metahrms.employee_management.repository.UserRepository;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -48,21 +49,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
     public String authenticate(LoginDto request) {
-                    var user = userRepository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new RuntimeException("User Not Found"));
-    
-                    boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BusinessException("Email hoặc mật khẩu không chính xác"));
 
+        boolean isAuthenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if (!isAuthenticated) {
-            throw new RuntimeException("Password did not match");
+            throw new BusinessException("Email hoặc mật khẩu không chính xác");
         }
 
         if (user.getStatus() == UserStatus.DELETED) {
-            throw new RuntimeException("Your account has been deleted! Please contact us to get more detail"); 
+            throw new BusinessException("Tài khoản đã bị xóa. Vui lòng liên hệ quản trị viên");
         } else if (user.getStatus() == UserStatus.DISABLED) {
-            throw new RuntimeException("Your account has been disabled! Please contact us to get more detail"); 
+            throw new BusinessException("Tài khoản đang bị vô hiệu hóa. Vui lòng liên hệ quản trị viên");
         } else if (user.getStatus() == UserStatus.PENDING) {
-            throw new RuntimeException("Your account has not been active! Please contact us to active your account"); 
+            throw new BusinessException("Tài khoản chưa được kích hoạt. Vui lòng liên hệ quản trị viên");
         }
 
         return generateToken(user.getId(), user.getEmail(), user.getUsername(), user.getRole());
