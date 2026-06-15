@@ -78,7 +78,7 @@ public class AttendanceServiceImpl implements AttendanceService {
             ));
         
         // 2. Check if already checked in today
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         AttendanceRecord existingRecord = attendanceRecordRepository
             .findByEmployeeIdAndDate(employee.getId(), today)
             .orElse(null);
@@ -164,7 +164,7 @@ if (shift == null) {
 }
         
         // 8. Calculate late minutes
-        LocalDateTime checkInTime = LocalDateTime.now();
+        LocalDateTime checkInTime = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         int lateMinutes = calculateLateMinutes(checkInTime.toLocalTime(), shift.getStartTime());
         
         AttendanceStatus status = determineCheckInStatus(lateMinutes, shift);
@@ -240,7 +240,7 @@ if (shift == null) {
             ));
         
         // 2. Get today's attendance record
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
         AttendanceRecord record = attendanceRecordRepository
             .findByEmployeeIdAndDate(employee.getId(), today)
             .orElseThrow(() -> new BusinessException(
@@ -319,7 +319,7 @@ if (shift == null) {
         String photoUrl = uploadCheckOutPhoto(request.getFaceImageBase64(), request.getEmployeeId());
         
         // 7. Calculate work hours and early leave
-LocalDateTime checkOutTime = LocalDateTime.now();
+LocalDateTime checkOutTime = LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
 
 // Load shift từ DB (tránh null do dual mapping)
 Shift shift = null;
